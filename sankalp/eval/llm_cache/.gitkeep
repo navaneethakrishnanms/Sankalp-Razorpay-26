@@ -1,0 +1,7 @@
+Committed LLM response cache.
+
+Every file here is one recorded model response, named by the sha256 of the
+request that produced it (see core/llm/client.cache_key). These files are
+COMMITTED ON PURPOSE: they are what makes the Stage 4 evaluation reproducible
+without an API key and without spend. Delete them only when deliberately
+re-recording, and re-run the eval in the same commit if you do.

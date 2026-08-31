@@ -1,0 +1,632 @@
+{
+  "baselines": {
+    "block_everything": {
+      "false_block_rate": 1.0,
+      "n_clean": 945,
+      "n_violations": 414,
+      "recall": 1.0
+    },
+    "block_nothing": {
+      "false_block_rate": 0.0,
+      "n_clean": 945,
+      "n_violations": 414,
+      "recall": 0.0
+    }
+  },
+  "constraint_and_receipt_verifiers": {
+    "abstain_accuracy": {
+      "abstain_expected_correct": {
+        "ci_high": 1.0,
+        "ci_low": 0.8713,
+        "n": 26,
+        "rate": 1.0,
+        "successes": 26
+      },
+      "over_abstention_on_clean": {
+        "ci_high": 0.004,
+        "ci_low": 0.0,
+        "n": 945,
+        "rate": 0.0,
+        "successes": 0
+      }
+    },
+    "base_rate_clean": 0.6954,
+    "clean_count": 945,
+    "false_block": {
+      "count": 0,
+      "note": "Stage-3 proxy only (FAIL-rate on CLEAN records) \u2014 real metric is Stage 6.",
+      "rate": {
+        "ci_high": 0.004,
+        "ci_low": 0.0,
+        "n": 945,
+        "rate": 0.0,
+        "successes": 0
+      },
+      "rupee_cost": "0"
+    },
+    "headline": {
+      "denominator": "all violations",
+      "false_block_rate_proxy": {
+        "ci_high": 0.004,
+        "ci_low": 0.0,
+        "n": 945,
+        "rate": 0.0,
+        "successes": 0
+      },
+      "note": "Recall over ALL violations \u2014 structurally-uncatchable records are IN the denominator and counted as misses. Single achieved deterministic operating point; see eval/harness.py module docstring for why the 1/2/5% false-block sweep is not yet meaningful.",
+      "recall_excl_total_misdeclared": {
+        "ci_high": 0.8755,
+        "ci_low": 0.7956,
+        "n": 324,
+        "rate": 0.8395,
+        "successes": 272
+      },
+      "recall_incl_total_misdeclared": {
+        "ci_high": 0.9029,
+        "ci_low": 0.839,
+        "n": 414,
+        "rate": 0.8744,
+        "successes": 362
+      }
+    },
+    "language": {
+      "en": {
+        "recall_excl_total_misdeclared": {
+          "ci_high": 0.8719,
+          "ci_low": 0.7756,
+          "n": 234,
+          "rate": 0.8291,
+          "successes": 194
+        },
+        "record_count": 947,
+        "within_expressive_power_excl_total_misdeclared": {
+          "ci_high": 1.0,
+          "ci_low": 0.9806,
+          "n": 194,
+          "rate": 1.0,
+          "successes": 194
+        }
+      },
+      "hinglish": {
+        "recall_excl_total_misdeclared": {
+          "ci_high": 0.9221,
+          "ci_low": 0.7813,
+          "n": 90,
+          "rate": 0.8667,
+          "successes": 78
+        },
+        "record_count": 412,
+        "within_expressive_power_excl_total_misdeclared": {
+          "ci_high": 1.0,
+          "ci_low": 0.9531,
+          "n": 78,
+          "rate": 1.0,
+          "successes": 78
+        }
+      }
+    },
+    "latency_seconds": {
+      "p50": 6.2e-05,
+      "p95": 0.000123
+    },
+    "misses": [
+      {
+        "hypothesis": "structurally uncatchable by design (see eval/generator.py's verifier_catchable tag)",
+        "order_id": "S02-biryani-office-lunch::QUANTITY_MISMATCH::0",
+        "subpopulation": "QUANTITY_MISMATCH:uncatchable",
+        "type": "expected",
+        "violation_class": "QUANTITY_MISMATCH"
+      },
+      {
+        "hypothesis": "structurally uncatchable by design (see eval/generator.py's verifier_catchable tag)",
+        "order_id": "S02-biryani-office-lunch::QUANTITY_MISMATCH::1",
+        "subpopulation": "QUANTITY_MISMATCH:uncatchable",
+        "type": "expected",
+        "violation_class": "QUANTITY_MISMATCH"
+      },
+      {
+        "hypothesis": "structurally uncatchable by design (see eval/generator.py's verifier_catchable tag)",
+        "order_id": "S02-biryani-office-lunch::QUANTITY_MISMATCH::2",
+        "subpopulation": "QUANTITY_MISMATCH:uncatchable",
+        "type": "expected",
+        "violation_class": "QUANTITY_MISMATCH"
+      },
+      {
+        "hypothesis": "structurally uncatchable by design (see eval/generator.py's verifier_catchable tag)",
+        "order_id": "S02-biryani-office-lunch::QUANTITY_MISMATCH::3",
+        "subpopulation": "QUANTITY_MISMATCH:uncatchable",
+        "type": "expected",
+        "violation_class": "QUANTITY_MISMATCH"
+      },
+      {
+        "hypothesis": "structurally uncatchable by design (see eval/generator.py's verifier_catchable tag)",
+        "order_id": "S04-biryani-not-oily-hinglish::CONSTRAINT_VIOLATION::0",
+        "subpopulation": "CONSTRAINT_VIOLATION:uncatchable",
+        "type": "expected",
+        "violation_class": "CONSTRAINT_VIOLATION"
+      },
+      {
+        "hypothesis": "structurally uncatchable by design (see eval/generator.py's verifier_catchable tag)",
+        "order_id": "S04-biryani-not-oily-hinglish::CONSTRAINT_VIOLATION::1",
+        "subpopulation": "CONSTRAINT_VIOLATION:uncatchable",
+        "type": "expected",
+        "violation_class": "CONSTRAINT_VIOLATION"
+      },
+      {
+        "hypothesis": "structurally uncatchable by design (see eval/generator.py's verifier_catchable tag)",
+        "order_id": "S04-biryani-not-oily-hinglish::CONSTRAINT_VIOLATION::2",
+        "subpopulation": "CONSTRAINT_VIOLATION:uncatchable",
+        "type": "expected",
+        "violation_class": "CONSTRAINT_VIOLATION"
+      },
+      {
+        "hypothesis": "structurally uncatchable by design (see eval/generator.py's verifier_catchable tag)",
+        "order_id": "S04-biryani-not-oily-hinglish::CONSTRAINT_VIOLATION::3",
+        "subpopulation": "CONSTRAINT_VIOLATION:uncatchable",
+        "type": "expected",
+        "violation_class": "CONSTRAINT_VIOLATION"
+      },
+      {
+        "hypothesis": "structurally uncatchable by design (see eval/generator.py's verifier_catchable tag)",
+        "order_id": "S07-biryani-snacks-ambiguous::QUANTITY_MISMATCH::0",
+        "subpopulation": "QUANTITY_MISMATCH:uncatchable",
+        "type": "expected",
+        "violation_class": "QUANTITY_MISMATCH"
+      },
+      {
+        "hypothesis": "structurally uncatchable by design (see eval/generator.py's verifier_catchable tag)",
+        "order_id": "S07-biryani-snacks-ambiguous::QUANTITY_MISMATCH::1",
+        "subpopulation": "QUANTITY_MISMATCH:uncatchable",
+        "type": "expected",
+        "violation_class": "QUANTITY_MISMATCH"
+      },
+      {
+        "hypothesis": "structurally uncatchable by design (see eval/generator.py's verifier_catchable tag)",
+        "order_id": "S10-pizza-not-too-spicy::CONSTRAINT_VIOLATION::0",
+        "subpopulation": "CONSTRAINT_VIOLATION:uncatchable",
+        "type": "expected",
+        "violation_class": "CONSTRAINT_VIOLATION"
+      },
+      {
+        "hypothesis": "structurally uncatchable by design (see eval/generator.py's verifier_catchable tag)",
+        "order_id": "S10-pizza-not-too-spicy::CONSTRAINT_VIOLATION::1",
+        "subpopulation": "CONSTRAINT_VIOLATION:uncatchable",
+        "type": "expected",
+        "violation_class": "CONSTRAINT_VIOLATION"
+      },
+      {
+        "hypothesis": "structurally uncatchable by design (see eval/generator.py's verifier_catchable tag)",
+        "order_id": "S10-pizza-not-too-spicy::CONSTRAINT_VIOLATION::2",
+        "subpopulation": "CONSTRAINT_VIOLATION:uncatchable",
+        "type": "expected",
+        "violation_class": "CONSTRAINT_VIOLATION"
+      },
+      {
+        "hypothesis": "structurally uncatchable by design (see eval/generator.py's verifier_catchable tag)",
+        "order_id": "S10-pizza-not-too-spicy::CONSTRAINT_VIOLATION::3",
+        "subpopulation": "CONSTRAINT_VIOLATION:uncatchable",
+        "type": "expected",
+        "violation_class": "CONSTRAINT_VIOLATION"
+      },
+      {
+        "hypothesis": "structurally uncatchable by design (see eval/generator.py's verifier_catchable tag)",
+        "order_id": "S11-pizza-garlic-coke::QUANTITY_MISMATCH::0",
+        "subpopulation": "QUANTITY_MISMATCH:uncatchable",
+        "type": "expected",
+        "violation_class": "QUANTITY_MISMATCH"
+      },
+      {
+        "hypothesis": "structurally uncatchable by design (see eval/generator.py's verifier_catchable tag)",
+        "order_id": "S11-pizza-garlic-coke::QUANTITY_MISMATCH::1",
+        "subpopulation": "QUANTITY_MISMATCH:uncatchable",
+        "type": "expected",
+        "violation_class": "QUANTITY_MISMATCH"
+      },
+      {
+        "hypothesis": "structurally uncatchable by design (see eval/generator.py's verifier_catchable tag)",
+        "order_id": "S14-pizza-not-fried-mixed::CONSTRAINT_VIOLATION::0",
+        "subpopulation": "CONSTRAINT_VIOLATION:uncatchable",
+        "type": "expected",
+        "violation_class": "CONSTRAINT_VIOLATION"
+      },
+      {
+        "hypothesis": "structurally uncatchable by design (see eval/generator.py's verifier_catchable tag)",
+        "order_id": "S14-pizza-not-fried-mixed::CONSTRAINT_VIOLATION::1",
+        "subpopulation": "CONSTRAINT_VIOLATION:uncatchable",
+        "type": "expected",
+        "violation_class": "CONSTRAINT_VIOLATION"
+      },
+      {
+        "hypothesis": "structurally uncatchable by design (see eval/generator.py's verifier_catchable tag)",
+        "order_id": "S14-pizza-not-fried-mixed::CONSTRAINT_VIOLATION::2",
+        "subpopulation": "CONSTRAINT_VIOLATION:uncatchable",
+        "type": "expected",
+        "violation_class": "CONSTRAINT_VIOLATION"
+      },
+      {
+        "hypothesis": "structurally uncatchable by design (see eval/generator.py's verifier_catchable tag)",
+        "order_id": "S14-pizza-not-fried-mixed::CONSTRAINT_VIOLATION::3",
+        "subpopulation": "CONSTRAINT_VIOLATION:uncatchable",
+        "type": "expected",
+        "violation_class": "CONSTRAINT_VIOLATION"
+      },
+      {
+        "hypothesis": "structurally uncatchable by design (see eval/generator.py's verifier_catchable tag)",
+        "order_id": "S15-pizza-minimal::QUANTITY_MISMATCH::0",
+        "subpopulation": "QUANTITY_MISMATCH:uncatchable",
+        "type": "expected",
+        "violation_class": "QUANTITY_MISMATCH"
+      },
+      {
+        "hypothesis": "structurally uncatchable by design (see eval/generator.py's verifier_catchable tag)",
+        "order_id": "S15-pizza-minimal::QUANTITY_MISMATCH::1",
+        "subpopulation": "QUANTITY_MISMATCH:uncatchable",
+        "type": "expected",
+        "violation_class": "QUANTITY_MISMATCH"
+      },
+      {
+        "hypothesis": "structurally uncatchable by design (see eval/generator.py's verifier_catchable tag)",
+        "order_id": "S17-southindian-idli-coffee::QUANTITY_MISMATCH::0",
+        "subpopulation": "QUANTITY_MISMATCH:uncatchable",
+        "type": "expected",
+        "violation_class": "QUANTITY_MISMATCH"
+      },
+      {
+        "hypothesis": "structurally uncatchable by design (see eval/generator.py's verifier_catchable tag)",
+        "order_id": "S17-southindian-idli-coffee::QUANTITY_MISMATCH::1",
+        "subpopulation": "QUANTITY_MISMATCH:uncatchable",
+        "type": "expected",
+        "violation_class": "QUANTITY_MISMATCH"
+      },
+      {
+        "hypothesis": "structurally uncatchable by design (see eval/generator.py's verifier_catchable tag)",
+        "order_id": "S18-southindian-rich::CONSTRAINT_VIOLATION::4",
+        "subpopulation": "CONSTRAINT_VIOLATION:uncatchable",
+        "type": "expected",
+        "violation_class": "CONSTRAINT_VIOLATION"
+      },
+      {
+        "hypothesis": "structurally uncatchable by design (see eval/generator.py's verifier_catchable tag)",
+        "order_id": "S18-southindian-rich::CONSTRAINT_VIOLATION::5",
+        "subpopulation": "CONSTRAINT_VIOLATION:uncatchable",
+        "type": "expected",
+        "violation_class": "CONSTRAINT_VIOLATION"
+      },
+      {
+        "hypothesis": "structurally uncatchable by design (see eval/generator.py's verifier_catchable tag)",
+        "order_id": "S19-southindian-served-hot-category::CONSTRAINT_VIOLATION::0",
+        "subpopulation": "CONSTRAINT_VIOLATION:uncatchable",
+        "type": "expected",
+        "violation_class": "CONSTRAINT_VIOLATION"
+      },
+      {
+        "hypothesis": "structurally uncatchable by design (see eval/generator.py's verifier_catchable tag)",
+        "order_id": "S19-southindian-served-hot-category::CONSTRAINT_VIOLATION::1",
+        "subpopulation": "CONSTRAINT_VIOLATION:uncatchable",
+        "type": "expected",
+        "violation_class": "CONSTRAINT_VIOLATION"
+      },
+      {
+        "hypothesis": "structurally uncatchable by design (see eval/generator.py's verifier_catchable tag)",
+        "order_id": "S21-southindian-dosa-chettinad::QUANTITY_MISMATCH::0",
+        "subpopulation": "QUANTITY_MISMATCH:uncatchable",
+        "type": "expected",
+        "violation_class": "QUANTITY_MISMATCH"
+      },
+      {
+        "hypothesis": "structurally uncatchable by design (see eval/generator.py's verifier_catchable tag)",
+        "order_id": "S21-southindian-dosa-chettinad::QUANTITY_MISMATCH::1",
+        "subpopulation": "QUANTITY_MISMATCH:uncatchable",
+        "type": "expected",
+        "violation_class": "QUANTITY_MISMATCH"
+      },
+      {
+        "hypothesis": "structurally uncatchable by design (see eval/generator.py's verifier_catchable tag)",
+        "order_id": "S24-punjabi-hinglish-budget::QUANTITY_MISMATCH::0",
+        "subpopulation": "QUANTITY_MISMATCH:uncatchable",
+        "type": "expected",
+        "violation_class": "QUANTITY_MISMATCH"
+      },
+      {
+        "hypothesis": "structurally uncatchable by design (see eval/generator.py's verifier_catchable tag)",
+        "order_id": "S24-punjabi-hinglish-budget::QUANTITY_MISMATCH::1",
+        "subpopulation": "QUANTITY_MISMATCH:uncatchable",
+        "type": "expected",
+        "violation_class": "QUANTITY_MISMATCH"
+      },
+      {
+        "hypothesis": "structurally uncatchable by design (see eval/generator.py's verifier_catchable tag)",
+        "order_id": "S28-punjabi-no-colour-ambiguous::CONSTRAINT_VIOLATION::0",
+        "subpopulation": "CONSTRAINT_VIOLATION:uncatchable",
+        "type": "expected",
+        "violation_class": "CONSTRAINT_VIOLATION"
+      },
+      {
+        "hypothesis": "structurally uncatchable by design (see eval/generator.py's verifier_catchable tag)",
+        "order_id": "S28-punjabi-no-colour-ambiguous::CONSTRAINT_VIOLATION::1",
+        "subpopulation": "CONSTRAINT_VIOLATION:uncatchable",
+        "type": "expected",
+        "violation_class": "CONSTRAINT_VIOLATION"
+      },
+      {
+        "hypothesis": "structurally uncatchable by design (see eval/generator.py's verifier_catchable tag)",
+        "order_id": "S28-punjabi-no-colour-ambiguous::QUANTITY_MISMATCH::0",
+        "subpopulation": "QUANTITY_MISMATCH:uncatchable",
+        "type": "expected",
+        "violation_class": "QUANTITY_MISMATCH"
+      },
+      {
+        "hypothesis": "structurally uncatchable by design (see eval/generator.py's verifier_catchable tag)",
+        "order_id": "S28-punjabi-no-colour-ambiguous::QUANTITY_MISMATCH::1",
+        "subpopulation": "QUANTITY_MISMATCH:uncatchable",
+        "type": "expected",
+        "violation_class": "QUANTITY_MISMATCH"
+      },
+      {
+        "hypothesis": "structurally uncatchable by design (see eval/generator.py's verifier_catchable tag)",
+        "order_id": "S30-freshmart-no-eggs::QUANTITY_MISMATCH::0",
+        "subpopulation": "QUANTITY_MISMATCH:uncatchable",
+        "type": "expected",
+        "violation_class": "QUANTITY_MISMATCH"
+      },
+      {
+        "hypothesis": "structurally uncatchable by design (see eval/generator.py's verifier_catchable tag)",
+        "order_id": "S30-freshmart-no-eggs::QUANTITY_MISMATCH::1",
+        "subpopulation": "QUANTITY_MISMATCH:uncatchable",
+        "type": "expected",
+        "violation_class": "QUANTITY_MISMATCH"
+      },
+      {
+        "hypothesis": "structurally uncatchable by design (see eval/generator.py's verifier_catchable tag)",
+        "order_id": "S31-freshmart-fresh-not-frozen::CONSTRAINT_VIOLATION::0",
+        "subpopulation": "CONSTRAINT_VIOLATION:uncatchable",
+        "type": "expected",
+        "violation_class": "CONSTRAINT_VIOLATION"
+      },
+      {
+        "hypothesis": "structurally uncatchable by design (see eval/generator.py's verifier_catchable tag)",
+        "order_id": "S31-freshmart-fresh-not-frozen::CONSTRAINT_VIOLATION::1",
+        "subpopulation": "CONSTRAINT_VIOLATION:uncatchable",
+        "type": "expected",
+        "violation_class": "CONSTRAINT_VIOLATION"
+      },
+      {
+        "hypothesis": "structurally uncatchable by design (see eval/generator.py's verifier_catchable tag)",
+        "order_id": "S31-freshmart-fresh-not-frozen::CONSTRAINT_VIOLATION::2",
+        "subpopulation": "CONSTRAINT_VIOLATION:uncatchable",
+        "type": "expected",
+        "violation_class": "CONSTRAINT_VIOLATION"
+      },
+      {
+        "hypothesis": "structurally uncatchable by design (see eval/generator.py's verifier_catchable tag)",
+        "order_id": "S31-freshmart-fresh-not-frozen::CONSTRAINT_VIOLATION::3",
+        "subpopulation": "CONSTRAINT_VIOLATION:uncatchable",
+        "type": "expected",
+        "violation_class": "CONSTRAINT_VIOLATION"
+      },
+      {
+        "hypothesis": "structurally uncatchable by design (see eval/generator.py's verifier_catchable tag)",
+        "order_id": "S34-freshmart-produce::QUANTITY_MISMATCH::0",
+        "subpopulation": "QUANTITY_MISMATCH:uncatchable",
+        "type": "expected",
+        "violation_class": "QUANTITY_MISMATCH"
+      },
+      {
+        "hypothesis": "structurally uncatchable by design (see eval/generator.py's verifier_catchable tag)",
+        "order_id": "S34-freshmart-produce::QUANTITY_MISMATCH::1",
+        "subpopulation": "QUANTITY_MISMATCH:uncatchable",
+        "type": "expected",
+        "violation_class": "QUANTITY_MISMATCH"
+      },
+      {
+        "hypothesis": "structurally uncatchable by design (see eval/generator.py's verifier_catchable tag)",
+        "order_id": "S38-dailybasket-no-mutton::QUANTITY_MISMATCH::0",
+        "subpopulation": "QUANTITY_MISMATCH:uncatchable",
+        "type": "expected",
+        "violation_class": "QUANTITY_MISMATCH"
+      },
+      {
+        "hypothesis": "structurally uncatchable by design (see eval/generator.py's verifier_catchable tag)",
+        "order_id": "S38-dailybasket-no-mutton::QUANTITY_MISMATCH::1",
+        "subpopulation": "QUANTITY_MISMATCH:uncatchable",
+        "type": "expected",
+        "violation_class": "QUANTITY_MISMATCH"
+      },
+      {
+        "hypothesis": "structurally uncatchable by design (see eval/generator.py's verifier_catchable tag)",
+        "order_id": "S40-dailybasket-unsalted-category::CONSTRAINT_VIOLATION::0",
+        "subpopulation": "CONSTRAINT_VIOLATION:uncatchable",
+        "type": "expected",
+        "violation_class": "CONSTRAINT_VIOLATION"
+      },
+      {
+        "hypothesis": "structurally uncatchable by design (see eval/generator.py's verifier_catchable tag)",
+        "order_id": "S40-dailybasket-unsalted-category::CONSTRAINT_VIOLATION::1",
+        "subpopulation": "CONSTRAINT_VIOLATION:uncatchable",
+        "type": "expected",
+        "violation_class": "CONSTRAINT_VIOLATION"
+      },
+      {
+        "hypothesis": "structurally uncatchable by design (see eval/generator.py's verifier_catchable tag)",
+        "order_id": "S40-dailybasket-unsalted-category::CONSTRAINT_VIOLATION::2",
+        "subpopulation": "CONSTRAINT_VIOLATION:uncatchable",
+        "type": "expected",
+        "violation_class": "CONSTRAINT_VIOLATION"
+      },
+      {
+        "hypothesis": "structurally uncatchable by design (see eval/generator.py's verifier_catchable tag)",
+        "order_id": "S40-dailybasket-unsalted-category::CONSTRAINT_VIOLATION::3",
+        "subpopulation": "CONSTRAINT_VIOLATION:uncatchable",
+        "type": "expected",
+        "violation_class": "CONSTRAINT_VIOLATION"
+      },
+      {
+        "hypothesis": "structurally uncatchable by design (see eval/generator.py's verifier_catchable tag)",
+        "order_id": "S42-dailybasket-mince-eggs::QUANTITY_MISMATCH::0",
+        "subpopulation": "QUANTITY_MISMATCH:uncatchable",
+        "type": "expected",
+        "violation_class": "QUANTITY_MISMATCH"
+      },
+      {
+        "hypothesis": "structurally uncatchable by design (see eval/generator.py's verifier_catchable tag)",
+        "order_id": "S42-dailybasket-mince-eggs::QUANTITY_MISMATCH::1",
+        "subpopulation": "QUANTITY_MISMATCH:uncatchable",
+        "type": "expected",
+        "violation_class": "QUANTITY_MISMATCH"
+      }
+    ],
+    "misses_summary": {
+      "expected": 52,
+      "unexpected": 0
+    },
+    "not_yet_exercised": [
+      "recall_at_2pct_false_block (Stage 6 \u2014 requires settlement instruction)",
+      "clarification_precision (Stage 6)",
+      "deceptive_self_report_catch_rate (Stage 5 \u2014 requires semantic verifier + floor enforcement)",
+      "band_distribution (Stage 6 \u2014 requires exposure scorer)",
+      "cost_per_clearing (Stage 4/6 \u2014 requires compiler / LLM calls; $0 this stage by construction)",
+      "compiler_metrics (Stage 4)"
+    ],
+    "per_subpopulation_recall": {
+      "BUDGET_BREACH": {
+        "ci_high": 1.0,
+        "ci_low": 0.9312,
+        "n": 52,
+        "rate": 1.0,
+        "successes": 52
+      },
+      "CONSTRAINT_VIOLATION:abstain": {
+        "ci_high": 1.0,
+        "ci_low": 0.8713,
+        "n": 26,
+        "rate": 1.0,
+        "successes": 26
+      },
+      "CONSTRAINT_VIOLATION:catchable": {
+        "ci_high": 1.0,
+        "ci_low": 0.9036,
+        "n": 36,
+        "rate": 1.0,
+        "successes": 36
+      },
+      "CONSTRAINT_VIOLATION:uncatchable": {
+        "ci_high": 0.1287,
+        "ci_low": 0.0,
+        "n": 26,
+        "rate": 0.0,
+        "successes": 0
+      },
+      "QUANTITY_MISMATCH:catchable": {
+        "ci_high": 1.0,
+        "ci_low": 0.9229,
+        "n": 46,
+        "rate": 1.0,
+        "successes": 46
+      },
+      "QUANTITY_MISMATCH:uncatchable": {
+        "ci_high": 0.1287,
+        "ci_low": 0.0,
+        "n": 26,
+        "rate": 0.0,
+        "successes": 0
+      },
+      "TIMING_MISS": {
+        "ci_high": 1.0,
+        "ci_low": 0.9286,
+        "n": 50,
+        "rate": 1.0,
+        "successes": 50
+      },
+      "TOTAL_MISDECLARED": {
+        "ci_high": 1.0,
+        "ci_low": 0.9591,
+        "n": 90,
+        "rate": 1.0,
+        "successes": 90
+      },
+      "WRONG_MERCHANT": {
+        "ci_high": 1.0,
+        "ci_low": 0.9417,
+        "n": 62,
+        "rate": 1.0,
+        "successes": 62
+      }
+    },
+    "record_count": 1359,
+    "secondary_diagnostic_within_expressive_power": {
+      "denominator": "violations within deterministic expressive power",
+      "note": "Recall over violations within deterministic expressive power \u2014 denominator EXCLUDES the structurally-uncatchable records. This is a diagnostic answering 'is the deterministic layer correct within its reach?', NOT a headline: its denominator is chosen by the component being measured. Always read it next to the headline figure above.",
+      "recall_excl_total_misdeclared": {
+        "ci_high": 1.0,
+        "ci_low": 0.9861,
+        "n": 272,
+        "rate": 1.0,
+        "successes": 272
+      },
+      "recall_incl_total_misdeclared": {
+        "ci_high": 1.0,
+        "ci_low": 0.9895,
+        "n": 362,
+        "rate": 1.0,
+        "successes": 362
+      }
+    },
+    "split": {
+      "holdout": {
+        "recall_excl_total_misdeclared": {
+          "ci_high": 0.8578,
+          "ci_low": 0.6941,
+          "n": 94,
+          "rate": 0.7872,
+          "successes": 74
+        },
+        "recall_incl_total_misdeclared": {
+          "ci_high": 0.8913,
+          "ci_low": 0.7603,
+          "n": 122,
+          "rate": 0.8361,
+          "successes": 102
+        },
+        "record_count": 416,
+        "within_expressive_power_excl_total_misdeclared": {
+          "ci_high": 1.0,
+          "ci_low": 0.9506,
+          "n": 74,
+          "rate": 1.0,
+          "successes": 74
+        }
+      },
+      "train": {
+        "recall_excl_total_misdeclared": {
+          "ci_high": 0.8997,
+          "ci_low": 0.8102,
+          "n": 230,
+          "rate": 0.8609,
+          "successes": 198
+        },
+        "recall_incl_total_misdeclared": {
+          "ci_high": 0.9213,
+          "ci_low": 0.8494,
+          "n": 292,
+          "rate": 0.8904,
+          "successes": 260
+        },
+        "record_count": 943,
+        "within_expressive_power_excl_total_misdeclared": {
+          "ci_high": 1.0,
+          "ci_low": 0.981,
+          "n": 198,
+          "rate": 1.0,
+          "successes": 198
+        }
+      }
+    },
+    "verifier_catchable_audit": {
+      "catchable_false_count": 52,
+      "mislabelled_count": 0,
+      "mislabelled_order_ids": []
+    },
+    "violation_count": 414
+  },
+  "stage": 3
+}

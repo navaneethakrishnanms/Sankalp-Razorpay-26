@@ -63,14 +63,20 @@ Thumbs.db
 *.sqlite3
 *.sqlite
 
-# LLM response cache (reproducible evals — keep cache dir but not cache files)
+# LLM response cache.
+# eval/llm_cache/ is COMMITTED ON PURPOSE — it is what makes the Stage 4
+# evaluation reproducible without an API key and without spend, and
+# CacheOnlyProvider enforces that. Do not add it here.
 .diskcache/
-llm_cache/
 
-# Eval results (generated; not committed except PRE_REGISTERED.md)
-eval/results/*.json
-eval/results/*.csv
-eval/corpus/*.json
+# Eval artefacts are COMMITTED, not ignored:
+#   eval/corpus/CORPUS_LOCK.json  — the hash lock; ignoring it would make
+#                                    "hash-locked in CI" meaningless
+#   eval/corpus/split.json        — the held-out split; a split that isn't
+#                                    committed isn't a control
+#   eval/results/*.json|md        — the published numbers
+# Nothing under eval/ is ignored. If a genuinely transient artefact appears
+# here later, ignore that exact path, never a glob over these directories.
 
 # Secrets / credentials
 .env.local
