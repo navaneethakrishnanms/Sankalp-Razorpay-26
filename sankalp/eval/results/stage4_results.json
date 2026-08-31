@@ -1,0 +1,388 @@
+{
+  "ambiguity_detection": {
+    "false_negatives": 0,
+    "false_positives": 1,
+    "note": "instruction_ambiguous was assigned per-seed by hand during corpus authoring from an intuitive reading, not a written-down rule — it is the noisiest label in the corpus. Read these as agreement with the author's intuition, not as ground truth.",
+    "precision": {
+      "ci_high": 0.7935,
+      "ci_low": 0.0,
+      "n": 1,
+      "rate": 0.0,
+      "successes": 0
+    },
+    "recall": {
+      "ci_high": 0.0,
+      "ci_low": 0.0,
+      "n": 0,
+      "rate": 0.0,
+      "successes": 0
+    },
+    "true_positives": 0
+  },
+  "cost": {
+    "mean_per_compilation_inr": "0.076524800",
+    "total_inr": "0.229574400",
+    "usd_to_inr": "88.0"
+  },
+  "criterion_extraction": {
+    "captured": 2,
+    "gold_criteria": 4,
+    "invented": 2,
+    "missed": 2,
+    "note": "Matched on (field, operator, value). SEMANTIC criteria are matched on (field, operator) only — their corpus value is a hand-authored label ('not_too_spicy') the compiler cannot reproduce without authoring a value, which the output guard forbids. Semantic extraction is therefore measured more coarsely than the rest.",
+    "precision": {
+      "ci_high": 0.85,
+      "ci_low": 0.15,
+      "n": 4,
+      "rate": 0.5,
+      "successes": 2
+    },
+    "recall": {
+      "ci_high": 0.85,
+      "ci_low": 0.15,
+      "n": 4,
+      "rate": 0.5,
+      "successes": 2
+    }
+  },
+  "delta_vs_gold_criteria": {
+    "compiled_false_block": {
+      "ci_high": 0.5514,
+      "ci_low": 0.314,
+      "n": 63,
+      "rate": 0.4286,
+      "successes": 27
+    },
+    "compiled_recall": {
+      "ci_high": 1.0,
+      "ci_low": 0.8794,
+      "n": 28,
+      "rate": 1.0,
+      "successes": 28
+    },
+    "false_block_attribution": {
+      "criterion:quantity_sum eq 2": 27
+    },
+    "false_block_delta": 0.4286,
+    "false_block_examples": [
+      {
+        "causes": [
+          "criterion:quantity_sum eq 2"
+        ],
+        "clean_mutation": "_clean_identity",
+        "order_id": "S02-biryani-office-lunch::CLEAN::0"
+      },
+      {
+        "causes": [
+          "criterion:quantity_sum eq 2"
+        ],
+        "clean_mutation": "_clean_bump",
+        "order_id": "S02-biryani-office-lunch::CLEAN::1"
+      },
+      {
+        "causes": [
+          "criterion:quantity_sum eq 2"
+        ],
+        "clean_mutation": "_clean_near_budget",
+        "order_id": "S02-biryani-office-lunch::CLEAN::10"
+      },
+      {
+        "causes": [
+          "criterion:quantity_sum eq 2"
+        ],
+        "clean_mutation": "_clean_extra_uncovered_item",
+        "order_id": "S02-biryani-office-lunch::CLEAN::11"
+      },
+      {
+        "causes": [
+          "criterion:quantity_sum eq 2"
+        ],
+        "clean_mutation": "_clean_near_deadline",
+        "order_id": "S02-biryani-office-lunch::CLEAN::12"
+      },
+      {
+        "causes": [
+          "criterion:quantity_sum eq 2"
+        ],
+        "clean_mutation": "_clean_undeclared_no_dietary",
+        "order_id": "S02-biryani-office-lunch::CLEAN::13"
+      },
+      {
+        "causes": [
+          "criterion:quantity_sum eq 2"
+        ],
+        "clean_mutation": "_clean_identity",
+        "order_id": "S02-biryani-office-lunch::CLEAN::14"
+      },
+      {
+        "causes": [
+          "criterion:quantity_sum eq 2"
+        ],
+        "clean_mutation": "_clean_bump",
+        "order_id": "S02-biryani-office-lunch::CLEAN::15"
+      },
+      {
+        "causes": [
+          "criterion:quantity_sum eq 2"
+        ],
+        "clean_mutation": "_clean_item_substitution",
+        "order_id": "S02-biryani-office-lunch::CLEAN::16"
+      },
+      {
+        "causes": [
+          "criterion:quantity_sum eq 2"
+        ],
+        "clean_mutation": "_clean_near_budget",
+        "order_id": "S02-biryani-office-lunch::CLEAN::17"
+      }
+    ],
+    "gold_false_block": {
+      "ci_high": 0.0575,
+      "ci_low": 0.0,
+      "n": 63,
+      "rate": 0.0,
+      "successes": 0
+    },
+    "gold_recall": {
+      "ci_high": 0.943,
+      "ci_low": 0.6851,
+      "n": 28,
+      "rate": 0.8571,
+      "successes": 24
+    },
+    "n_clean": 63,
+    "n_violations": 28,
+    "note": "Stage 3 verifiers run over the same train records twice — once with hand-authored obligations, once with compiled ones. This is the compiler's true cost at the point of decision.",
+    "recall_delta": 0.1429
+  },
+  "latency_seconds": {
+    "note": "Cached responses report near-zero latency; re-record to measure live latency.",
+    "p50": 0.0011,
+    "p95": 0.0011
+  },
+  "per_language": {
+    "en": {
+      "extraction_precision": {
+        "ci_high": 0.85,
+        "ci_low": 0.15,
+        "n": 4,
+        "rate": 0.5,
+        "successes": 2
+      },
+      "extraction_recall": {
+        "ci_high": 0.85,
+        "ci_low": 0.15,
+        "n": 4,
+        "rate": 0.5,
+        "successes": 2
+      },
+      "seeds": 3
+    }
+  },
+  "per_seed": [
+    {
+      "captured": 2,
+      "compiled_budget_ceiling": "1500",
+      "compiled_criteria": [
+        {
+          "field": "quantity_sum",
+          "operator": "gte",
+          "source": "stated",
+          "value": 4
+        },
+        {
+          "field": "item.ingredients",
+          "operator": "excludes",
+          "source": "stated",
+          "value": "beef"
+        }
+      ],
+      "compiled_delivery_latest_by": "2026-08-28T21:00:00+00:00",
+      "compiled_merchant_scope": {
+        "category": null,
+        "merchant_ids": [
+          "rest-biryani"
+        ]
+      },
+      "compiled_prohibited": [
+        "beef"
+      ],
+      "dropped": [],
+      "gold_ambiguous": false,
+      "gold_budget_ceiling": "1500.00",
+      "gold_criteria": [
+        {
+          "field": "quantity_sum",
+          "operator": "gte",
+          "source": "stated",
+          "value": 4
+        },
+        {
+          "field": "item.ingredients",
+          "operator": "excludes",
+          "source": "stated",
+          "value": "beef"
+        }
+      ],
+      "gold_merchant_scope": {
+        "category": null,
+        "merchant_ids": [
+          "rest-biryani"
+        ]
+      },
+      "instruction": "Order dinner for 4 people from Biryani House. No beef. Keep it under ₹1500. It should arrive by 9pm.",
+      "invented": 0,
+      "language": "en",
+      "missed": 0,
+      "predicted_ambiguous": false,
+      "seed_id": "S01-biryani-dinner-4",
+      "unresolvable_paths": []
+    },
+    {
+      "captured": 0,
+      "compiled_budget_ceiling": "1600",
+      "compiled_criteria": [
+        {
+          "field": "quantity_sum",
+          "operator": "eq",
+          "source": "stated",
+          "value": 2
+        }
+      ],
+      "compiled_delivery_latest_by": null,
+      "compiled_merchant_scope": {
+        "category": null,
+        "merchant_ids": [
+          "rest-biryani"
+        ]
+      },
+      "compiled_prohibited": [],
+      "dropped": [],
+      "gold_ambiguous": false,
+      "gold_budget_ceiling": "1300.00",
+      "gold_criteria": [
+        {
+          "field": "distinct_item_count",
+          "operator": "eq",
+          "source": "stated",
+          "value": 2
+        }
+      ],
+      "gold_merchant_scope": {
+        "category": null,
+        "merchant_ids": [
+          "rest-biryani"
+        ]
+      },
+      "instruction": "Please order 2 Chicken Biryani and 2 Veg Biryani from Biryani House for the office lunch. Try to keep it under ₹1600. Thank you.",
+      "invented": 1,
+      "language": "en",
+      "missed": 1,
+      "predicted_ambiguous": false,
+      "seed_id": "S02-biryani-office-lunch",
+      "unresolvable_paths": []
+    },
+    {
+      "captured": 0,
+      "compiled_budget_ceiling": null,
+      "compiled_criteria": [
+        {
+          "field": "quantity_sum",
+          "operator": "eq",
+          "source": "stated",
+          "value": 2
+        }
+      ],
+      "compiled_delivery_latest_by": null,
+      "compiled_merchant_scope": {
+        "category": "food_delivery",
+        "merchant_ids": []
+      },
+      "compiled_prohibited": [],
+      "dropped": [],
+      "gold_ambiguous": false,
+      "gold_budget_ceiling": null,
+      "gold_criteria": [
+        {
+          "field": "quantity_sum",
+          "operator": "gte",
+          "source": "stated",
+          "value": 2
+        }
+      ],
+      "gold_merchant_scope": {
+        "category": "food_delivery",
+        "merchant_ids": []
+      },
+      "instruction": "Order 2 Mutton Biryani, any food delivery place is fine.",
+      "invented": 1,
+      "language": "en",
+      "missed": 1,
+      "predicted_ambiguous": true,
+      "seed_id": "S03-biryani-category-scope",
+      "unresolvable_paths": []
+    }
+  ],
+  "provenance": {
+    "cache_hits": 3,
+    "cache_misses": 0,
+    "max_tokens": 4096,
+    "model": "openai/gpt-oss-120b",
+    "note": "A metric without its model identifier is not reproducible. Every number in this file was produced by exactly this configuration.",
+    "pricing_source": "PLACEHOLDER — verify at https://groq.com/pricing before publishing",
+    "pricing_verified": false,
+    "prompt_file": "obligation_compiler_v1.md",
+    "prompt_version": "obligation_compiler/v1",
+    "provider": "groq",
+    "reasoning_effort": "medium",
+    "reference_date": "2026-08-28T00:00:00+00:00",
+    "temperature": 0.0
+  },
+  "scope": "train split only — holdout untouched at Stage 4",
+  "seeds_compiled": 3,
+  "source_labelling": {
+    "accuracy": {
+      "ci_high": 1.0,
+      "ci_low": 0.3424,
+      "n": 2,
+      "rate": 1.0,
+      "successes": 2
+    },
+    "counts": {
+      "correct": 2,
+      "inferred_labelled_as_stated": 0,
+      "other_mismatch": 0,
+      "stated_labelled_as_inferred": 0
+    },
+    "inferred_labelled_as_stated_rate": {
+      "ci_high": 0.6576,
+      "ci_low": 0.0,
+      "n": 2,
+      "rate": 0.0,
+      "successes": 0
+    },
+    "matched_criteria": 2,
+    "note": "Scored only on criteria that matched gold by (field, operator, value). stated_labelled_as_inferred is the dangerous direction: the criterion survives but can no longer block, so violations clear while extraction accuracy still looks clean.",
+    "stated_labelled_as_inferred_rate": {
+      "ci_high": 0.6576,
+      "ci_low": 0.0,
+      "n": 2,
+      "rate": 0.0,
+      "successes": 0
+    }
+  },
+  "stage": 4,
+  "train_records_in_scope": 91,
+  "unresolvable_paths": {
+    "count": 0,
+    "note": "Field paths the model emitted that are not in core/models/fields.py.",
+    "paths": [],
+    "rate": {
+      "ci_high": 0.4899,
+      "ci_low": 0.0,
+      "n": 4,
+      "rate": 0.0,
+      "successes": 0
+    }
+  }
+}

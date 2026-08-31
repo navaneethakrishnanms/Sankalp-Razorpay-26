@@ -155,13 +155,53 @@ Only steps 1 and 5-semantic involve a model. Everything else is deterministic
 Python. Design decisions and deliberate deviations are recorded in
 [`ARCHITECTURE.md`](ARCHITECTURE.md).
 
-**Reproducibility without an API key.** Determinism is *not* `temperature=0` —
-sampling parameters were removed on current Claude models and a request carrying
-them is rejected. Instead every LLM response is cached on disk, keyed by a hash
-over (provider, model, system, prompt, max_tokens, effort, prompt_version), and
-`eval/llm_cache/` is **committed**. `CacheOnlyProvider` raises on a cache miss
-rather than silently generating fresh output, so a CI run either reproduces the
-recorded bytes exactly or fails.
+### Open weights, as a design claim
+
+The obligation compiler runs on **`openai/gpt-oss-120b` via Groq** — open
+weights, not a frontier model. That is a claim about the architecture, not a
+budget decision.
+
+SANKALP's safety property does not come from the model being good. It comes
+from floor enforcement: a verifier's verdict counts only if the evidence it
+declared clears the obligation's admissibility floor, and that check is
+deterministic Python that never asks how capable the model was. If the guarantee
+were really "we used a strong model", the lattice would be decoration.
+
+Running the one hard AI component on open weights is the test of that claim. We
+expect worse extraction and worse Hinglish handling than a frontier model would
+give, and those numbers are reported as they come. What must **not** degrade is
+the structural property — a sub-floor verifier contributes zero regardless of
+which model produced it.
+
+The Anthropic path is kept working and selected by configuration
+(`SANKALP_LLM_PROVIDER=anthropic`), so the swap is reversible and the claim is
+testable in both directions.
+
+**Reproducibility without an API key.** Every LLM response is cached on disk,
+keyed by a hash over (provider, model, system, prompt, max_tokens, **temperature**,
+effort, prompt_version), and `eval/llm_cache/` is **committed**. Model and
+temperature are in the key deliberately: without them, switching provider would
+replay the old model's responses under the new model's name and corrupt every
+metric. `CacheOnlyProvider` raises on a miss rather than silently generating
+fresh output, so CI either reproduces the recorded bytes exactly or fails.
+
+Determinism comes from `temperature=0` plus that cache — note that Anthropic
+*removed* sampling parameters on current models (a request carrying `temperature`
+is rejected with a 400), which is why temperature is applied per-provider rather
+than globally.
+
+### Credentials
+
+Keys live in `.env`, which is gitignored; `.env.example` is the committed
+template and holds placeholders only. Keys are read from the environment at
+client construction only — never inside business logic, never logged, never in a
+cache key, never in an error message. `scripts/check_no_secrets.py` fails CI if a
+live-looking key appears anywhere in the tree, and runs before the test suite so
+a leak stops the build immediately.
+
+```bash
+cp .env.example .env      # then edit .env and add your key
+```
 
 ---
 

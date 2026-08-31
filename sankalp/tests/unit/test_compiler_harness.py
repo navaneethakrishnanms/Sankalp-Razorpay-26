@@ -165,10 +165,30 @@ class TestRunCompilerEval:
         return run_compiler_eval(client=client, limit_seeds=4)
 
     def test_produces_every_expected_section(self, metrics):
-        for key in ("criterion_extraction", "source_labelling", "unresolvable_paths",
-                     "ambiguity_detection", "per_language", "cost", "latency_seconds",
-                     "delta_vs_gold_criteria", "per_seed"):
+        for key in ("provenance", "criterion_extraction", "source_labelling",
+                     "unresolvable_paths", "ambiguity_detection", "per_language",
+                     "cost", "latency_seconds", "delta_vs_gold_criteria", "per_seed"):
             assert key in metrics, key
+
+    def test_provenance_pins_the_exact_configuration(self, metrics):
+        """A number without its model identifier is not reproducible."""
+        p = metrics["provenance"]
+        for field in ("provider", "model", "temperature", "reasoning_effort",
+                       "prompt_version", "prompt_file"):
+            assert field in p and p[field] is not None, field
+
+    def test_provenance_records_temperature_zero(self, metrics):
+        """temperature>0 would make the same instruction compile differently each
+        run, voiding both the cache and the metrics."""
+        assert metrics["provenance"]["temperature"] == 0.0
+
+    def test_provenance_flags_unverified_pricing(self, metrics):
+        assert "pricing_verified" in metrics["provenance"]
+
+    def test_provenance_carries_no_credential(self, metrics):
+        blob = json.dumps(metrics["provenance"])
+        assert "gsk" not in blob and "sk-ant" not in blob
+        assert "api_key" not in blob.lower()
 
     def test_scope_is_train_only(self, metrics):
         assert "train" in metrics["scope"]

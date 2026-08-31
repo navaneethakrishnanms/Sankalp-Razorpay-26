@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      # Runs first and standalone: a leaked key must fail the build before
+      # anything else spends time, and the failure must be unmissable.
+      - name: Secret scan
+        run: python scripts/check_no_secrets.py
+
+      - name: Tests
+        # No credential is set. Every test must pass without one — the LLM
+        # cache is committed precisely so CI can reproduce Stage 4 numbers
+        # with no key and no spend.
+        env:
+          SANKALP_LLM_PROVIDER: cache_only
+        run: pytest -q
+
+      - name: Lint
+        run: |
+          python -m ruff check core eval agent scripts tests
+          python -m mypy core
+
+      - name: Stage 3 evaluation (deterministic, no LLM)
+        run: python -c "from eval.harness import write_results; write_results()"
+
+      - name: Fail if committed results drifted
+        # The published numbers must match what the current code produces.
+        run: git diff --exit-code eval/results/ eval/corpus/

@@ -74,8 +74,45 @@ from core.obligation.ambiguity import (
 )
 from core.obligation.binder import bind
 
-PROMPT_FILE = "obligation_compiler_v1.md"
-PROMPT_VERSION = "obligation_compiler/v1"
+# Prompt versions are selectable so that iterating on the prompt produces a
+# SIDE-BY-SIDE comparison rather than overwriting the previous result. Prompt
+# iteration against a measured set is a form of fitting, and the only honest way
+# to do it is to keep every version's numbers visible.
+#
+# v1 -> v2 changes exactly one thing: it documents the corpus convention that
+# quantity criteria are floors (`gte`), with over-ordering caught by
+# budget_ceiling rather than by the quantity check. v1 had no way to know this,
+# and compiled "Order 2 Margherita" as `eq 2`, which false-blocked every clean
+# record that added a unit. Keeping the change to one axis is what makes any
+# metric movement attributable to it.
+PROMPT_VERSIONS: dict[str, str] = {
+    "v1": "obligation_compiler_v1.md",
+    "v2": "obligation_compiler_v2.md",
+}
+DEFAULT_PROMPT_VERSION = "v1"
+
+PROMPT_FILE = PROMPT_VERSIONS[DEFAULT_PROMPT_VERSION]
+PROMPT_VERSION = f"obligation_compiler/{DEFAULT_PROMPT_VERSION}"
+
+
+def resolve_prompt(version: str) -> tuple[str, str]:
+    """Return (filename, cache-key version string) for a prompt version."""
+    if version not in PROMPT_VERSIONS:
+        raise CompilerError(
+            f"Unknown prompt version {version!r}. Available: {sorted(PROMPT_VERSIONS)}"
+        )
+    return PROMPT_VERSIONS[version], f"obligation_compiler/{version}"
+
+# Providers reserve (prompt tokens + max_tokens) against a per-minute budget,
+# so this is not a free ceiling — on Groq's free tier (8,000 TPM) a value of
+# 8192 makes a ~2,300-token prompt reserve 10,475 and the request is rejected
+# outright, before the model ever runs.
+#
+# 4096 leaves ample room for the largest corpus output (S18 declares 5 criteria;
+# the JSON runs ~700 tokens) plus gpt-oss reasoning tokens, while keeping the
+# whole reservation near 6,400 — inside the free tier. Raise it on a paid tier
+# via --max-tokens if a compilation ever truncates.
+DEFAULT_MAX_TOKENS = 4096
 
 SYSTEM_PROMPT = (
     "You are a precise structured-data extractor for a payment-clearing system. "
@@ -266,8 +303,8 @@ def _coerce_value(field: str, operator: CriterionOperator, value_span: str) -> o
 
 # ── Compiler ──────────────────────────────────────────────────────────────
 
-def build_prompt(instruction: str) -> str:
-    template = load_prompt(PROMPT_FILE)
+def build_prompt(instruction: str, prompt_file: str = PROMPT_FILE) -> str:
+    template = load_prompt(prompt_file)
     registry_lines = "\n".join(
         f"- `{path}` — {get_field_spec(path).description}" for path in all_paths()
     )
@@ -283,6 +320,10 @@ def compile_obligation(
     user_id: str = "unknown",
     reference_date: datetime | None = None,
     model: str = DEFAULT_MODEL,
+    temperature: float = 0.0,
+    effort: str = "medium",
+    max_tokens: int = DEFAULT_MAX_TOKENS,
+    prompt_version: str = DEFAULT_PROMPT_VERSION,
     created_at: datetime | None = None,
 ) -> CompilationResult:
     """
@@ -296,12 +337,18 @@ def compile_obligation(
     reference = reference_date or datetime(2026, 8, 28, tzinfo=timezone.utc)
     frozen_created_at = created_at or datetime(2026, 8, 28, tzinfo=timezone.utc)
 
+    prompt_file, prompt_version_string = resolve_prompt(prompt_version)
+
     request = LLMRequest(
         system=SYSTEM_PROMPT,
-        prompt=build_prompt(instruction),
-        max_tokens=4096,
-        effort="high",
-        prompt_version=PROMPT_VERSION,
+        prompt=build_prompt(instruction, prompt_file),
+        max_tokens=max_tokens,
+        # temperature=0 for reproducibility. Providers that reject sampling
+        # parameters (current Anthropic models) ignore this field — see
+        # core/llm/client.py.
+        temperature=temperature,
+        effort=effort,
+        prompt_version=prompt_version_string,
         model=model,
     )
     response = client.complete(request)
@@ -451,7 +498,7 @@ def compile_obligation(
     # the LLM output would replay identically and the hash still wouldn't match.
     # Derive it instead, so identical inputs give an identical bound obligation.
     obligation_id = "obl-" + hashlib.sha256(
-        f"{user_id}::{instruction}::{PROMPT_VERSION}".encode("utf-8")
+        f"{user_id}::{instruction}::{prompt_version_string}".encode("utf-8")
     ).hexdigest()[:24]
 
     obligation = Obligation(

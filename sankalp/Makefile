@@ -7,17 +7,22 @@
 
 PY ?= python
 
-.PHONY: help test test-cov lint corpus eval eval-stage4 eval-stage4-record verify
+.PHONY: help test test-cov lint secrets corpus eval eval-stage4 eval-stage4-smoke eval-stage4-record verify
 
 help:
 	@echo "test                 run the full test suite"
 	@echo "test-cov             run tests with coverage over core/"
 	@echo "lint                 ruff + mypy (strict on core/)"
+	@echo "secrets              fail if a live-looking API key is in the tree"
 	@echo "corpus               regenerate the corpus and re-lock its hashes"
 	@echo "eval                 Stage 3 evaluation (deterministic, no API key)"
 	@echo "eval-stage4          Stage 4 compiler eval, replaying the committed cache"
-	@echo "eval-stage4-record   Stage 4 compiler eval against the live API (SPENDS MONEY)"
-	@echo "verify               test + lint + Stage 3 eval"
+	@echo "eval-stage4-smoke    Stage 4 on 3 seeds against the live API (cheap check)"
+	@echo "eval-stage4-record   Stage 4 full train split against the live API (SPENDS MONEY)"
+	@echo "verify               secrets + test + lint + Stage 3 eval"
+
+secrets:
+	$(PY) scripts/check_no_secrets.py
 
 test:
 	$(PY) -m pytest -q
@@ -38,9 +43,13 @@ eval:
 eval-stage4:
 	$(PY) -m eval.compiler_harness --cache-only
 
-# Requires ANTHROPIC_API_KEY (or `ant auth login`). Records into eval/llm_cache/,
-# which should then be committed so the run is reproducible without a key.
+# Both of the below need GROQ_API_KEY in .env (see .env.example).
+# Records into eval/llm_cache/, which should then be committed so the run is
+# reproducible without a key.
+eval-stage4-smoke:
+	$(PY) -m eval.compiler_harness --limit-seeds 3
+
 eval-stage4-record:
 	$(PY) -m eval.compiler_harness
 
-verify: test lint eval
+verify: secrets test lint eval

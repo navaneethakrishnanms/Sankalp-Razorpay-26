@@ -15,11 +15,17 @@ dependencies = [
     # always go through core/settlement/rails/razorpay.py.
     "razorpay>=1.4",
     # LLM — accessed only through core/llm/client.py, never directly.
+    # Both providers are installed so the Groq/Anthropic swap is reversible
+    # without a dependency change; which one runs is config, not code
+    # (SANKALP_LLM_PROVIDER).
     # The response cache is a plain content-addressed directory of JSON files
     # (core/llm/client.LLMClient), not diskcache: the cache must be COMMITTED
     # and human-readable so a reviewer can see which prompt produced which
     # response, which a binary cache format would prevent.
+    "groq>=0.11",
     "anthropic>=0.28",
+    # Loads .env at client construction. Keys never live in code or in git.
+    "python-dotenv>=1.0",
 ]
 
 [project.optional-dependencies]

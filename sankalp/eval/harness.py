@@ -511,6 +511,13 @@ def _render_markdown(metrics: dict[str, Any], baselines: dict[str, Any]) -> str:
         f"{_fmt(metrics['split']['holdout']['recall_excl_total_misdeclared'])} "
         f"— low resolution, aggregate only, draw no per-class conclusions here",
         "",
+        "A train/holdout gap here is NOT overfitting: at Stage 3 nothing fits — the "
+        "verifiers are deterministic code written before the split existed and they "
+        "never see a label. Because catchable-only recall is exactly 100%, headline "
+        "recall reduces to the ratio of catchable to uncatchable violations in each "
+        "split, so any gap is corpus composition. It becomes a meaningful signal at "
+        "Stage 4, when the compiler prompt is something that can overfit.",
+        "",
         "## Language",
         "",
         f"- en: recall (excl. TOTAL_MISDECLARED) {_fmt(metrics['language']['en']['recall_excl_total_misdeclared'])}",

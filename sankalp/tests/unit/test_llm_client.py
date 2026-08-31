@@ -8,13 +8,15 @@ on current Claude models (see the module docstring in core/llm/client.py).
 
 from __future__ import annotations
 
+import json
 from decimal import Decimal
 
 import pytest
 
 from core.llm.client import (
     DEFAULT_MODEL,
-    MODEL_PRICING_USD_PER_MTOK,
+    MAX_RETRIES,
+    MODEL_PRICING,
     USD_TO_INR,
     CacheMiss,
     CacheOnlyProvider,
@@ -22,14 +24,23 @@ from core.llm.client import (
     LLMError,
     LLMRequest,
     LLMResponse,
+    MissingCredential,
+    _backoff_delay,
+    _is_retryable,
     cache_key,
+    parse_token_limit,
+    request_can_never_fit,
 )
 
 
 class RecordingProvider:
-    """Test double: returns a canned response and counts invocations."""
+    """Test double: returns a canned response and counts invocations.
 
-    name = "anthropic"
+    Named "groq" to match the project default, so cache entries it writes are
+    replayable by a default-constructed CacheOnlyProvider — the same namespace
+    agreement a real record-then-replay run depends on."""
+
+    name = "groq"
 
     def __init__(self, text: str = '{"ok": true}') -> None:
         self.text = text
@@ -44,8 +55,8 @@ class RecordingProvider:
 
 
 def make_request(**overrides) -> LLMRequest:
-    defaults = dict(system="sys", prompt="hello", max_tokens=1024,
-                     effort="high", prompt_version="v1", model=DEFAULT_MODEL)
+    defaults = dict(system="sys", prompt="hello", max_tokens=1024, temperature=0.0,
+                     effort="medium", prompt_version="v1", model=DEFAULT_MODEL)
     defaults.update(overrides)
     return LLMRequest(**defaults)
 
@@ -63,6 +74,44 @@ class TestCacheKey:
         assert cache_key("anthropic", make_request()) != cache_key(
             "anthropic", make_request(model="claude-sonnet-5")
         )
+
+    def test_same_prompt_two_models_produce_two_cache_entries(self, tmp_path):
+        """THE provider-swap guard. Without the model in the key, switching
+        models would replay the previous model's responses under the new
+        model's name and silently corrupt every Stage 4 metric."""
+        provider = RecordingProvider(text='{"from": "model-a"}')
+        client = LLMClient(provider, cache_dir=tmp_path)
+
+        client.complete(make_request(model="openai/gpt-oss-120b"))
+        client.complete(make_request(model="claude-opus-5"))
+
+        assert provider.calls == 2, "second model must not be served from the first's entry"
+        assert len(list(tmp_path.glob("*.json"))) == 2
+
+    def test_provider_change_changes_key(self):
+        """Same model string under two providers is still two entries."""
+        assert cache_key("groq", make_request()) != cache_key("anthropic", make_request())
+
+    def test_temperature_change_changes_key(self):
+        """temperature=1 compiles differently every run; its output must never
+        be served for a temperature=0 request."""
+        assert cache_key("groq", make_request(temperature=0.0)) != cache_key(
+            "groq", make_request(temperature=1.0)
+        )
+
+    def test_temperature_is_part_of_the_stored_request(self, tmp_path):
+        provider = RecordingProvider()
+        LLMClient(provider, cache_dir=tmp_path).complete(make_request(temperature=0.0))
+        entry = json.loads(next(tmp_path.glob("*.json")).read_text(encoding="utf-8"))
+        assert entry["_request"]["temperature"] == 0.0
+        assert entry["_request"]["provider"] == "groq"
+
+    def test_key_contains_no_credential_material(self, monkeypatch):
+        """A cache key is written to a filename. It must never encode a secret."""
+        monkeypatch.setenv("GROQ_API_KEY", "gsk" + "_" + "x" * 40)
+        key = cache_key("groq", make_request())
+        assert "gsk" not in key
+        assert all(c in "0123456789abcdef" for c in key)
 
     def test_prompt_version_change_changes_key(self):
         """Editing a prompt without bumping its version would otherwise replay
@@ -172,6 +221,61 @@ class TestCacheOnlyProvider:
         assert CacheOnlyProvider().name == RecordingProvider().name
 
 
+class TestAuthFailureIsActionable:
+    """A missing credential must produce one clear line, not a traceback into
+    SDK internals. Regression test for the Stage 4 first-run failure."""
+
+    def test_message_names_every_way_to_supply_a_key(self):
+        from core.llm.client import AnthropicProvider
+
+        provider = AnthropicProvider.__new__(AnthropicProvider)
+        provider._anthropic = _StubAnthropicModule()
+        provider._client = _AuthFailingClient()
+
+        with pytest.raises(LLMError) as exc:
+            provider.complete(make_request())
+        message = str(exc.value)
+        assert "ANTHROPIC_API_KEY" in message
+        assert "cmd.exe" in message and "PowerShell" in message
+        assert "--cache-only" in message
+
+    def test_non_auth_type_error_is_not_mislabelled_as_auth(self):
+        from core.llm.client import AnthropicProvider
+
+        provider = AnthropicProvider.__new__(AnthropicProvider)
+        provider._anthropic = _StubAnthropicModule()
+        provider._client = _ParamFailingClient()
+
+        with pytest.raises(LLMError, match="rejected the request parameters"):
+            provider.complete(make_request())
+
+
+class _StubAnthropicModule:
+    """Minimal stand-in so the provider's except-clauses resolve without the SDK."""
+    class APIStatusError(Exception):
+        status_code = 500
+
+    class APIConnectionError(Exception):
+        pass
+
+
+class _AuthFailingClient:
+    class messages:
+        @staticmethod
+        def create(**kwargs):
+            raise TypeError(
+                '"Could not resolve authentication method. Expected one of api_key, '
+                'auth_token, or credentials to be set."'
+            )
+
+
+class _ParamFailingClient:
+    class messages:
+        @staticmethod
+        def create(**kwargs):
+            raise TypeError("unexpected keyword argument 'output_config'")
+
+
 class TestCost:
     def test_opus_5_cost_matches_published_rates(self):
         response = LLMResponse(text="", input_tokens=1_000_000, output_tokens=1_000_000,
@@ -195,4 +299,209 @@ class TestCost:
             response.cost_usd()
 
     def test_default_model_has_pricing(self):
-        assert DEFAULT_MODEL in MODEL_PRICING_USD_PER_MTOK
+        assert DEFAULT_MODEL in MODEL_PRICING
+
+    def test_groq_pricing_is_flagged_unverified(self):
+        """An unverified price still yields a number, but must never be
+        presented as authoritative. The flag is what keeps that honest."""
+        assert MODEL_PRICING["openai/gpt-oss-120b"].verified is False
+        assert "verify" in MODEL_PRICING["openai/gpt-oss-120b"].source_note.lower()
+
+    def test_anthropic_pricing_is_marked_verified(self):
+        assert MODEL_PRICING["claude-opus-5"].verified is True
+
+
+class TestRetryPolicy:
+    def test_rate_limit_is_retryable(self):
+        exc = type("RateLimitError", (Exception,), {"status_code": 429})()
+        assert _is_retryable(exc) is True
+
+    def test_server_error_is_retryable(self):
+        exc = type("InternalServerError", (Exception,), {"status_code": 503})()
+        assert _is_retryable(exc) is True
+
+    def test_bad_request_is_not_retryable(self):
+        """Retrying a 400 burns quota and delays a clear error — it will fail
+        identically every time."""
+        exc = type("BadRequestError", (Exception,), {"status_code": 400})()
+        assert _is_retryable(exc) is False
+
+    def test_connection_error_is_retryable_by_name(self):
+        exc = type("APIConnectionError", (Exception,), {})()
+        assert _is_retryable(exc) is True
+
+    def test_backoff_grows_with_attempt(self):
+        rng_hi = __import__("random").Random(1)
+        early = max(_backoff_delay(0, rng_hi) for _ in range(50))
+        late = max(_backoff_delay(4, rng_hi) for _ in range(50))
+        assert late > early
+
+    def test_backoff_is_capped(self):
+        rng = __import__("random").Random(2)
+        assert all(_backoff_delay(20, rng) <= 60.0 for _ in range(50))
+
+    def test_backoff_has_jitter(self):
+        """Without jitter, every retry from a burst re-collides at the same
+        instant and the rate limit never clears."""
+        rng = __import__("random").Random(3)
+        samples = {round(_backoff_delay(3, rng), 6) for _ in range(20)}
+        assert len(samples) > 1
+
+    def test_retry_cap_is_finite(self):
+        assert 1 <= MAX_RETRIES <= 10
+
+
+class TestTokenBudgetClassification:
+    """Groq reports token rate limits as HTTP 413 with code rate_limit_exceeded,
+    not 429. Two failures hide under that one status and need opposite handling."""
+
+    TPM_EXCEEDED = (
+        "Error code: 413 - {'error': {'message': 'Request too large for model "
+        "`openai/gpt-oss-120b` ... on tokens per minute (TPM): Limit 8000, "
+        "Requested 10475, please reduce your message size and try again.'}}"
+    )
+    TPM_TRANSIENT = (
+        "Error code: 413 - {'error': {'message': 'Rate limit reached ... "
+        "on tokens per minute (TPM): Limit 8000, Requested 6379.'}}"
+    )
+
+    def _exc(self, message: str, status: int = 413) -> Exception:
+        return type("APIStatusError", (Exception,), {"status_code": status})(message)
+
+    def test_parses_limit_and_requested(self):
+        assert parse_token_limit(self._exc(self.TPM_EXCEEDED)) == (8000, 10475)
+
+    def test_parse_returns_none_for_unrelated_error(self):
+        assert parse_token_limit(self._exc("something else")) is None
+
+    def test_oversized_request_can_never_fit(self):
+        assert request_can_never_fit(self._exc(self.TPM_EXCEEDED)) is True
+
+    def test_fitting_request_is_not_permanently_impossible(self):
+        assert request_can_never_fit(self._exc(self.TPM_TRANSIENT)) is False
+
+    def test_oversized_request_is_not_retried(self):
+        """Retrying burns six attempts and ~2 minutes to reach the same error."""
+        assert _is_retryable(self._exc(self.TPM_EXCEEDED)) is False
+
+    def test_transient_token_limit_is_retried(self):
+        """A 413 that CAN fit is ordinary exhaustion — waiting clears it. Treating
+        413 as a plain client error would make every TPM exhaustion permanent."""
+        assert _is_retryable(self._exc(self.TPM_TRANSIENT)) is True
+
+    def test_413_without_numbers_is_retried(self):
+        assert _is_retryable(self._exc("Error code: 413 - payload issue")) is True
+
+    def test_oversized_error_message_is_actionable(self):
+        """It must name the fix (lower max_tokens), not just the symptom."""
+        pytest.importorskip("groq")
+        from core.llm.client import GroqProvider
+
+        provider = GroqProvider.__new__(GroqProvider)
+        provider._min_interval = 0.0
+        provider._last_call_at = 0.0
+        provider._client = _TpmExceededClient(self.TPM_EXCEEDED)
+
+        with pytest.raises(LLMError) as exc:
+            provider.complete(make_request(max_tokens=8192))
+        message = str(exc.value)
+        assert "max_tokens" in message
+        assert "Waiting cannot fix this" in message
+        assert "--max-tokens" in message
+
+
+class TestAdaptivePacing:
+    def _provider(self):
+        pytest.importorskip("groq")
+        from core.llm.client import GroqProvider
+
+        provider = GroqProvider.__new__(GroqProvider)
+        provider._min_interval = 0.0
+        provider._last_call_at = 0.0
+        return provider
+
+    def test_pacing_starts_at_zero(self):
+        """A fast tier must never be slowed artificially."""
+        assert self._provider()._min_interval == 0.0
+
+    def test_pacing_derives_interval_from_the_reported_limit(self):
+        provider = self._provider()
+        exc = Exception("TPM: Limit 8000, Requested 4000")
+        provider._slow_down(exc)
+        # 60s * 4000/8000 = 30s sustainable spacing
+        assert provider._min_interval == pytest.approx(30.0)
+
+    def test_pacing_only_widens(self):
+        provider = self._provider()
+        provider._slow_down(Exception("TPM: Limit 8000, Requested 4000"))
+        provider._slow_down(Exception("TPM: Limit 8000, Requested 500"))
+        assert provider._min_interval == pytest.approx(30.0)
+
+    def test_pacing_is_capped(self):
+        provider = self._provider()
+        provider._slow_down(Exception("TPM: Limit 10, Requested 10000"))
+        assert provider._min_interval <= 120.0
+
+    def test_pacing_falls_back_when_error_has_no_numbers(self):
+        provider = self._provider()
+        provider._slow_down(Exception("rate limited"))
+        assert provider._min_interval == pytest.approx(15.0)
+
+
+class _TpmExceededClient:
+    def __init__(self, message: str) -> None:
+        err = type("APIStatusError", (Exception,), {"status_code": 413})
+
+        class _completions:
+            @staticmethod
+            def create(**kwargs):
+                raise err(message)
+
+        class _chat:
+            completions = _completions
+
+        self.chat = _chat
+
+
+class TestCredentialHandling:
+    def test_missing_groq_key_names_the_file_to_create(self, monkeypatch):
+        monkeypatch.delenv("GROQ_API_KEY", raising=False)
+        pytest.importorskip("groq")
+        from core.llm.client import GroqProvider
+
+        with pytest.raises(MissingCredential) as exc:
+            GroqProvider()
+        message = str(exc.value)
+        assert ".env" in message and "GROQ_API_KEY" in message
+        assert "--cache-only" in message
+
+    def test_placeholder_value_is_treated_as_missing(self, monkeypatch):
+        """A copied-but-unedited .env must fail like an absent one, not send
+        'REPLACE_ME' to the provider."""
+        monkeypatch.setenv("GROQ_API_KEY", "REPLACE_ME")
+        pytest.importorskip("groq")
+        from core.llm.client import GroqProvider
+
+        with pytest.raises(MissingCredential):
+            GroqProvider()
+
+    def test_credential_never_appears_in_the_error(self, monkeypatch):
+        secret = "gsk" + "_" + "s3cr3t" * 8
+        monkeypatch.setenv("GROQ_API_KEY", secret)
+        pytest.importorskip("groq")
+        from core.llm.client import GroqProvider
+
+        provider = GroqProvider()
+        # Force a non-retryable failure and confirm the key is not echoed.
+        provider._client = _BadRequestClient()
+        with pytest.raises(LLMError) as exc:
+            provider.complete(make_request())
+        assert secret not in str(exc.value)
+
+
+class _BadRequestClient:
+    class chat:
+        class completions:
+            @staticmethod
+            def create(**kwargs):
+                raise type("BadRequestError", (Exception,), {"status_code": 400})("bad model")

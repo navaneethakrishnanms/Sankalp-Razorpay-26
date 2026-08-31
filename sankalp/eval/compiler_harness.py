@@ -40,6 +40,7 @@ from __future__ import annotations
 
 import dataclasses
 import json
+import os
 import statistics
 import time
 from datetime import datetime, timezone
@@ -47,10 +48,23 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
-from core.llm.client import USD_TO_INR, LLMClient, default_client
+from core.llm.client import (
+    MODEL_PRICING,
+    USD_TO_INR,
+    LLMClient,
+    default_client,
+    default_model_for,
+)
 from core.models.enums import Verdict
 from core.models.obligation import Obligation
-from core.obligation.compiler import CompilationResult, compile_obligation
+from core.obligation.compiler import (
+    DEFAULT_MAX_TOKENS,
+    DEFAULT_PROMPT_VERSION,
+    PROMPT_VERSIONS,
+    CompilationResult,
+    compile_obligation,
+    resolve_prompt,
+)
 from core.verifiers.constraint import evaluate_constraint_checks
 from eval.harness import load_records, load_split, record_to_models
 from eval.stats import rate
@@ -193,14 +207,51 @@ def caught_by_composite(record: dict[str, Any], obligation: Obligation, cart) ->
 
 def blocked_by_composite(obligation: Obligation, cart) -> bool:
     """Would this record be blocked? Used for the false-block side of the delta."""
+    return bool(block_causes(obligation, cart))
+
+
+def block_causes(obligation: Obligation, cart) -> list[str]:
+    """
+    WHICH checks blocked this record, not just whether one did.
+
+    A false-block rate tells you the compiler is wrong; the cause tells you
+    where. Without this, an invented criterion and a mis-parsed budget ceiling
+    look identical in the results and the only way to tell them apart is to
+    re-run the pipeline by hand.
+    """
     detail = evaluate_constraint_checks(obligation, cart)
-    return (
-        any(v == Verdict.FAIL for v in detail.criterion_verdicts.values())
-        or detail.budget_verdict == Verdict.FAIL
-        or detail.merchant_scope_verdict == Verdict.FAIL
-        or detail.delivery_verdict == Verdict.FAIL
-        or detail.total_arithmetic_verdict == Verdict.FAIL
-    )
+    causes: list[str] = []
+    by_id = {c.id: c for c in obligation.acceptance_criteria}
+    for cid, verdict in detail.criterion_verdicts.items():
+        if verdict == Verdict.FAIL:
+            criterion = by_id.get(cid)
+            if criterion is not None:
+                causes.append(f"criterion:{criterion.field} {criterion.operator.value} {criterion.value!r}")
+            else:
+                causes.append(f"criterion:{cid}")
+    if detail.budget_verdict == Verdict.FAIL:
+        causes.append("budget_ceiling")
+    if detail.merchant_scope_verdict == Verdict.FAIL:
+        causes.append("merchant_scope")
+    if detail.delivery_verdict == Verdict.FAIL:
+        causes.append("delivery_window")
+    if detail.total_arithmetic_verdict == Verdict.FAIL:
+        causes.append("cart.total_arithmetic")
+    return causes
+
+
+def _criteria_dump(obligation: Obligation) -> list[dict[str, Any]]:
+    return [
+        {"field": c.field, "operator": c.operator.value, "value": c.value, "source": c.source.value}
+        for c in obligation.acceptance_criteria
+    ]
+
+
+def _gold_criteria_dump(record: dict[str, Any]) -> list[dict[str, Any]]:
+    return [
+        {"field": c["field"], "operator": c["operator"], "value": c["value"], "source": c["source"]}
+        for c in record["obligation"]["acceptance_criteria"]
+    ]
 
 
 # ── Top-level run ─────────────────────────────────────────────────────────
@@ -210,8 +261,14 @@ def run_compiler_eval(
     client: LLMClient | None = None,
     cache_only: bool = False,
     limit_seeds: int | None = None,
+    model: str | None = None,
+    temperature: float = 0.0,
+    effort: str = "medium",
+    max_tokens: int = DEFAULT_MAX_TOKENS,
+    prompt_version: str = DEFAULT_PROMPT_VERSION,
 ) -> dict[str, Any]:
     client = client or default_client(cache_only=cache_only)
+    resolved_model = model or default_model_for(client.provider.name)
     records = load_records()
     split = load_split()
 
@@ -239,12 +296,41 @@ def run_compiler_eval(
             client=client,
             user_id="eval",
             reference_date=REFERENCE_DATE,
+            model=resolved_model,
+            temperature=temperature,
+            effort=effort,
+            max_tokens=max_tokens,
+            prompt_version=prompt_version,
         )
         latency = time.perf_counter() - started
         compilations.append(evaluate_seed(record, result, latency=latency))
         compiled_by_seed[seed_id] = result.obligation
 
-    return _summarise(compilations, compiled_by_seed, train_records, seed_ids)
+    provenance = {
+        "note": (
+            "A metric without its model identifier is not reproducible. Every number "
+            "in this file was produced by exactly this configuration."
+        ),
+        "provider": client.provider.name,
+        "model": resolved_model,
+        "temperature": temperature,
+        "reasoning_effort": effort,
+        "max_tokens": max_tokens,
+        "prompt_version": resolve_prompt(prompt_version)[1],
+        "prompt_file": resolve_prompt(prompt_version)[0],
+        "reference_date": REFERENCE_DATE.isoformat(),
+        "cache_hits": client.hits,
+        "cache_misses": client.misses,
+        "pricing_verified": (
+            MODEL_PRICING[resolved_model].verified if resolved_model in MODEL_PRICING else False
+        ),
+        "pricing_source": (
+            MODEL_PRICING[resolved_model].source_note
+            if resolved_model in MODEL_PRICING else "no pricing entry"
+        ),
+    }
+
+    return _summarise(compilations, compiled_by_seed, train_records, seed_ids, provenance)
 
 
 def _summarise(
@@ -252,6 +338,7 @@ def _summarise(
     compiled_by_seed: dict[str, Obligation],
     train_records: list[dict[str, Any]],
     seed_ids: list[str],
+    provenance: dict[str, Any],
 ) -> dict[str, Any]:
     total_captured = sum(c.captured for c in compilations)
     total_invented = sum(c.invented for c in compilations)
@@ -268,6 +355,54 @@ def _summarise(
             confusion_total[key] += value
     matched_total = sum(confusion_total.values())
 
+    # ── Obligation-field extraction ────────────────────────────────────────
+    # Criteria are only half the compiler's output. budget_ceiling,
+    # merchant_scope and delivery_window drive four of the six violation
+    # classes (BUDGET_BREACH, WRONG_MERCHANT, TIMING_MISS, and the clean-record
+    # false blocks they cause), so scoring criteria alone leaves most of the
+    # delta unexplained.
+    field_scores: dict[str, dict[str, int]] = {
+        name: {"correct": 0, "missed": 0, "spurious": 0, "wrong_value": 0}
+        for name in ("budget_ceiling", "merchant_scope", "delivery_window")
+    }
+    field_mismatches: list[dict[str, Any]] = []
+
+    def _score(name: str, seed_id: str, instruction: str, gold: Any, got: Any) -> None:
+        if gold is None and got is None:
+            field_scores[name]["correct"] += 1
+            return
+        if gold is not None and got is None:
+            field_scores[name]["missed"] += 1
+        elif gold is None and got is not None:
+            field_scores[name]["spurious"] += 1
+        elif str(gold) == str(got):
+            field_scores[name]["correct"] += 1
+            return
+        else:
+            field_scores[name]["wrong_value"] += 1
+        field_mismatches.append(
+            {"seed_id": seed_id, "field": name, "gold": str(gold), "compiled": str(got),
+             "instruction": instruction}
+        )
+
+    for c in compilations:
+        gold_ob = c.gold_record["obligation"]
+        got_ob = c.result.obligation
+
+        _score("budget_ceiling", c.seed_id, c.instruction,
+                gold_ob["budget_ceiling"],
+                str(got_ob.budget_ceiling) if got_ob.budget_ceiling is not None else None)
+
+        gold_scope = gold_ob["merchant_scope"]["merchant_ids"] or gold_ob["merchant_scope"]["category"]
+        got_scope = list(got_ob.merchant_scope.merchant_ids) or got_ob.merchant_scope.category
+        _score("merchant_scope", c.seed_id, c.instruction, gold_scope or None, got_scope or None)
+
+        gold_deadline = (gold_ob["delivery_window"] or {}).get("latest_by")
+        got_deadline = (
+            got_ob.delivery_window.latest_by.isoformat() if got_ob.delivery_window else None
+        )
+        _score("delivery_window", c.seed_id, c.instruction, gold_deadline, got_deadline)
+
     unresolvable = [p for c in compilations for p in c.result.unresolvable_paths]
     emitted_including_invalid = total_emitted + len(unresolvable)
 
@@ -283,6 +418,8 @@ def _summarise(
     scoped = [r for r in train_records if r["generation"]["seed_id"] in set(seed_ids)]
     gold_caught = gold_blocked = comp_caught = comp_blocked = 0
     n_violations = n_clean = 0
+    false_block_attribution: dict[str, int] = {}
+    false_block_examples: list[dict[str, Any]] = []
 
     for record in scoped:
         gold_obligation, cart = record_to_models(record)
@@ -292,7 +429,17 @@ def _summarise(
         if is_clean:
             n_clean += 1
             gold_blocked += int(blocked_by_composite(gold_obligation, cart))
-            comp_blocked += int(blocked_by_composite(compiled_obligation, cart))
+            causes = block_causes(compiled_obligation, cart)
+            if causes:
+                comp_blocked += 1
+                for cause in causes:
+                    false_block_attribution[cause] = false_block_attribution.get(cause, 0) + 1
+                if len(false_block_examples) < 10:
+                    false_block_examples.append({
+                        "order_id": record["order_id"],
+                        "clean_mutation": record["generation"]["mutation"],
+                        "causes": causes,
+                    })
         else:
             n_violations += 1
             gold_caught += int(caught_by_composite(record, gold_obligation, cart))
@@ -320,6 +467,7 @@ def _summarise(
     return {
         "stage": 4,
         "scope": "train split only — holdout untouched at Stage 4",
+        "provenance": provenance,
         "seeds_compiled": len(compilations),
         "train_records_in_scope": len(scoped),
 
@@ -337,6 +485,21 @@ def _summarise(
             "missed": total_missed,
             "recall": rate(total_captured, total_gold).as_dict(),
             "precision": rate(total_captured, total_emitted).as_dict(),
+        },
+
+        "obligation_field_extraction": {
+            "note": (
+                "budget_ceiling, merchant_scope and delivery_window are not "
+                "AcceptanceCriteria but drive four of the six violation classes. "
+                "'spurious' means the compiler invented a limit the user never set — "
+                "the most expensive error here, because it blocks correct orders."
+            ),
+            "counts": field_scores,
+            "accuracy": {
+                name: rate(s["correct"], sum(s.values())).as_dict()
+                for name, s in field_scores.items()
+            },
+            "mismatches": field_mismatches,
         },
 
         "source_labelling": {
@@ -407,12 +570,34 @@ def _summarise(
             "gold_false_block": gold_fb.as_dict(),
             "compiled_false_block": comp_fb.as_dict(),
             "false_block_delta": round(comp_fb.rate - gold_fb.rate, 4),
+            "false_block_attribution": dict(
+                sorted(false_block_attribution.items(), key=lambda kv: -kv[1])
+            ),
+            "false_block_examples": false_block_examples,
         },
 
         "per_seed": [
             {
                 "seed_id": c.seed_id, "language": c.language,
+                "instruction": c.instruction,
                 "captured": c.captured, "invented": c.invented, "missed": c.missed,
+                "gold_criteria": _gold_criteria_dump(c.gold_record),
+                "compiled_criteria": _criteria_dump(c.result.obligation),
+                "gold_budget_ceiling": c.gold_record["obligation"]["budget_ceiling"],
+                "compiled_budget_ceiling": (
+                    str(c.result.obligation.budget_ceiling)
+                    if c.result.obligation.budget_ceiling is not None else None
+                ),
+                "gold_merchant_scope": c.gold_record["obligation"]["merchant_scope"],
+                "compiled_merchant_scope": {
+                    "merchant_ids": list(c.result.obligation.merchant_scope.merchant_ids),
+                    "category": c.result.obligation.merchant_scope.category,
+                },
+                "compiled_delivery_latest_by": (
+                    c.result.obligation.delivery_window.latest_by.isoformat()
+                    if c.result.obligation.delivery_window is not None else None
+                ),
+                "compiled_prohibited": list(c.result.obligation.prohibited),
                 "unresolvable_paths": c.result.unresolvable_paths,
                 "dropped": c.result.dropped_criteria,
                 "gold_ambiguous": c.gold_ambiguous, "predicted_ambiguous": c.predicted_ambiguous,
@@ -423,11 +608,18 @@ def _summarise(
 
 
 def write_results(metrics: dict[str, Any], out_dir: Path | None = None) -> Path:
+    """
+    Write per-prompt-version files. A v2 run must never overwrite v1's numbers:
+    prompt iteration against a measured set is a form of fitting, and the only
+    honest way to do it is to keep every version's results side by side.
+    """
     out_dir = out_dir or RESULTS_DIR
     out_dir.mkdir(parents=True, exist_ok=True)
-    path = out_dir / "stage4_compiler_results.json"
+    version = metrics["provenance"]["prompt_version"].rsplit("/", 1)[-1]
+    stem = f"stage4_results_{version}"
+    path = out_dir / f"{stem}.json"
     path.write_text(json.dumps(metrics, indent=2, sort_keys=True, ensure_ascii=False), encoding="utf-8")
-    (out_dir / "stage4_compiler_results.md").write_text(_render_markdown(metrics), encoding="utf-8")
+    (out_dir / f"{stem}.md").write_text(_render_markdown(metrics), encoding="utf-8")
     return path
 
 
@@ -440,11 +632,26 @@ def _render_markdown(m: dict[str, Any]) -> str:
     src = m["source_labelling"]
     d = m["delta_vs_gold_criteria"]
     amb = m["ambiguity_detection"]
+    p = m["provenance"]
     lines = [
         "# SANKALP — Stage 4 Results (obligation compiler)",
         "",
         f"Scope: {m['scope']}. {m['seeds_compiled']} seeds compiled, "
         f"{m['train_records_in_scope']} train records in scope.",
+        "",
+        "## Provenance",
+        "",
+        p["note"],
+        "",
+        f"| | |",
+        f"|---|---|",
+        f"| provider | `{p['provider']}` |",
+        f"| model | `{p['model']}` |",
+        f"| temperature | {p['temperature']} |",
+        f"| reasoning effort | {p['reasoning_effort']} |",
+        f"| prompt version | `{p['prompt_version']}` ({p['prompt_file']}) |",
+        f"| cache hits / misses | {p['cache_hits']} / {p['cache_misses']} |",
+        f"| pricing verified | {'yes' if p['pricing_verified'] else '**NO** — ' + p['pricing_source']} |",
         "",
         "## Criterion extraction",
         "",
@@ -452,6 +659,28 @@ def _render_markdown(m: dict[str, Any]) -> str:
         f"- captured: {ex['captured']} | invented: {ex['invented']} | missed: {ex['missed']}",
         f"- recall: {_fmt(ex['recall'])}",
         f"- precision: {_fmt(ex['precision'])}",
+        "",
+        "## Obligation-field extraction",
+        "",
+        m["obligation_field_extraction"]["note"],
+        "",
+        "| field | correct | missed | spurious | wrong value | accuracy |",
+        "|---|---|---|---|---|---|",
+    ]
+    for name, counts in m["obligation_field_extraction"]["counts"].items():
+        acc = m["obligation_field_extraction"]["accuracy"][name]
+        lines.append(
+            f"| `{name}` | {counts['correct']} | {counts['missed']} | "
+            f"{counts['spurious']} | {counts['wrong_value']} | {_fmt(acc)} |"
+        )
+    mismatches = m["obligation_field_extraction"]["mismatches"]
+    if mismatches:
+        lines += ["", "Mismatches:", ""]
+        lines += [
+            f"- `{mm['seed_id']}` **{mm['field']}** gold=`{mm['gold']}` compiled=`{mm['compiled']}`"
+            for mm in mismatches[:15]
+        ]
+    lines += [
         "",
         "## Source labelling (the metric that hides failure)",
         "",
@@ -481,6 +710,20 @@ def _render_markdown(m: dict[str, Any]) -> str:
         f"|---|---|---|---|",
         f"| recall | {_fmt(d['gold_recall'])} | {_fmt(d['compiled_recall'])} | {d['recall_delta']:+.1%} |",
         f"| false-block | {_fmt(d['gold_false_block'])} | {_fmt(d['compiled_false_block'])} | {d['false_block_delta']:+.1%} |",
+        "",
+        "### What caused the false blocks",
+        "",
+        "A false-block rate says the compiler is wrong; the cause says where.",
+        "",
+    ]
+    if d["false_block_attribution"]:
+        lines += ["| cause | clean records blocked |", "|---|---|"]
+        lines += [f"| `{cause}` | {count} |" for cause, count in d["false_block_attribution"].items()]
+    else:
+        lines.append("_No clean record was blocked by the compiled criteria._")
+    lines += [
+        "",
+        "Per-seed gold-vs-compiled criteria are in `stage4_results.json` under `per_seed`.",
         "",
         "## Cost and latency",
         "",
@@ -520,12 +763,52 @@ def main(argv: list[str] | None = None) -> int:
         help="Compile only the first N train seeds — use for a cheap smoke run before "
              "spending on the full set.",
     )
+    parser.add_argument(
+        "--model", default=None,
+        help="Override the model string. Defaults to the provider's default "
+             "(groq: openai/gpt-oss-120b).",
+    )
+    parser.add_argument(
+        "--temperature", type=float, default=0.0,
+        help="Sampling temperature. Defaults to 0 — anything higher makes the same "
+             "instruction compile differently on each run, which makes both the cache "
+             "and the metrics meaningless.",
+    )
+    parser.add_argument(
+        "--effort", default="medium",
+        help="Reasoning effort passed to the provider (default: medium).",
+    )
+    parser.add_argument(
+        "--max-tokens", type=int, default=DEFAULT_MAX_TOKENS,
+        help=f"Output token ceiling (default: {DEFAULT_MAX_TOKENS}). Providers reserve "
+             f"(prompt + max_tokens) against a per-minute budget, so raising this can "
+             f"push a request past a free-tier limit and get it rejected outright.",
+    )
+    parser.add_argument(
+        "--prompt-version", default=DEFAULT_PROMPT_VERSION, choices=sorted(PROMPT_VERSIONS),
+        help=f"Prompt version to compile with (default: {DEFAULT_PROMPT_VERSION}). Each "
+             f"version writes its own eval/results/stage4_results_<version>.* files, so "
+             f"iterating never overwrites an earlier version's numbers.",
+    )
+    parser.add_argument(
+        "--pace-seconds", type=float, default=0.0,
+        help="Minimum seconds between provider calls. 0 (default) self-tunes: pacing "
+             "starts at zero and widens automatically the first time a token rate "
+             "limit is hit. Set explicitly to skip the discovery round-trips.",
+    )
     args = parser.parse_args(argv)
 
-    metrics = run_compiler_eval(cache_only=args.cache_only, limit_seeds=args.limit_seeds)
+    if args.pace_seconds > 0:
+        os.environ["SANKALP_GROQ_MIN_INTERVAL"] = str(args.pace_seconds)
+
+    metrics = run_compiler_eval(
+        cache_only=args.cache_only, limit_seeds=args.limit_seeds,
+        model=args.model, temperature=args.temperature, effort=args.effort,
+        max_tokens=args.max_tokens, prompt_version=args.prompt_version,
+    )
     path = write_results(metrics)
     print(_render_markdown(metrics))
-    print(f"\nWrote {path} and {path.with_name('stage4_compiler_results.md')}")
+    print(f"\nWrote {path} and {path.with_suffix('.md')}")
     return 0
 
 

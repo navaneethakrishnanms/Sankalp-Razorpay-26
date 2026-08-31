@@ -79,8 +79,13 @@ Thumbs.db
 # here later, ignore that exact path, never a glob over these directories.
 
 # Secrets / credentials
+# .env holds real API keys and is NEVER committed. .env.example is the
+# committed template and contains placeholders only. scripts/check_no_secrets.py
+# enforces that no live-looking key reaches the tree, and runs in CI.
+.env
 .env.local
 .env.*.local
+!.env.example
 *.pem
 *.key
 secrets.toml

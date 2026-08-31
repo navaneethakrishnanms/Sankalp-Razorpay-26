@@ -363,6 +363,70 @@ class TestAmbiguity:
         assert all(f.span == "" for f in conflicting), "the unquoted span must be dropped"
 
 
+class TestPromptVersioning:
+    """Prompt iteration against a measured set is a form of fitting. It is only
+    honest if every version's numbers survive side by side, which requires the
+    version to be selectable and to reach the cache key."""
+
+    def test_both_versions_resolve(self):
+        from core.obligation.compiler import PROMPT_VERSIONS, resolve_prompt
+
+        assert set(PROMPT_VERSIONS) >= {"v1", "v2"}
+        for version in ("v1", "v2"):
+            filename, version_string = resolve_prompt(version)
+            assert filename.endswith(".md")
+            assert version_string.endswith(f"/{version}")
+
+    def test_unknown_version_raises(self):
+        from core.obligation.compiler import resolve_prompt
+
+        with pytest.raises(CompilerError, match="Unknown prompt version"):
+            resolve_prompt("v99")
+
+    def test_default_is_v1_until_a_baseline_exists(self):
+        from core.obligation.compiler import DEFAULT_PROMPT_VERSION
+
+        assert DEFAULT_PROMPT_VERSION == "v1"
+
+    def test_versions_produce_different_prompts(self):
+        from core.obligation.compiler import build_prompt
+
+        v1 = build_prompt("Order 2 Margherita", "obligation_compiler_v1.md")
+        v2 = build_prompt("Order 2 Margherita", "obligation_compiler_v2.md")
+        assert v1 != v2
+
+    def test_v2_documents_the_floor_convention(self):
+        """v1 had no way to know quantities are floors; that is the one axis v2
+        changes, so any metric movement is attributable to it."""
+        from core.obligation.compiler import build_prompt
+
+        v2 = build_prompt("x", "obligation_compiler_v2.md").lower()
+        assert "gte" in v2 and "floor" in v2
+        assert "never `eq`" in v2 or "not `eq" in v2
+
+    def test_version_reaches_the_cache_key(self, tmp_path):
+        """Two prompt versions must never share a cached response."""
+        from core.llm.client import cache_key
+
+        client = LLMClient(ScriptedProvider(GOOD_PAYLOAD), cache_dir=tmp_path)
+        a = compile_obligation(INSTRUCTION, client=client, reference_date=REFERENCE,
+                                prompt_version="v1")
+        b = compile_obligation(INSTRUCTION, client=client, reference_date=REFERENCE,
+                                prompt_version="v2")
+        assert a.llm_response is not None and b.llm_response is not None
+        assert len(list(tmp_path.glob("*.json"))) == 2, "each version needs its own entry"
+        _ = cache_key
+
+    def test_version_reaches_the_obligation_id(self, tmp_path):
+        client = LLMClient(ScriptedProvider(GOOD_PAYLOAD), cache_dir=tmp_path,
+                            read_cache=False, write_cache=False)
+        a = compile_obligation(INSTRUCTION, client=client, reference_date=REFERENCE,
+                                prompt_version="v1")
+        b = compile_obligation(INSTRUCTION, client=client, reference_date=REFERENCE,
+                                prompt_version="v2")
+        assert a.obligation.id != b.obligation.id
+
+
 class TestMonetaryAndDatetimeCriteriaAreRefused:
     def test_total_criterion_is_dropped_not_coerced_through_float(self, tmp_path):
         """AcceptanceCriterion.value has no Decimal member; coercing money via
