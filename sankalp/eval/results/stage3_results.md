@@ -57,6 +57,8 @@ Recall over violations within deterministic expressive power — denominator EXC
 - train: 943 records, recall (excl. TOTAL_MISDECLARED) 86.1% [81.0%, 90.0%] (n=230)
 - holdout: 416 records, recall (excl. TOTAL_MISDECLARED) 78.7% [69.4%, 85.8%] (n=94) — low resolution, aggregate only, draw no per-class conclusions here
 
+A train/holdout gap here is NOT overfitting: at Stage 3 nothing fits — the verifiers are deterministic code written before the split existed and they never see a label. Because catchable-only recall is exactly 100%, headline recall reduces to the ratio of catchable to uncatchable violations in each split, so any gap is corpus composition. It becomes a meaningful signal at Stage 4, when the compiler prompt is something that can overfit.
+
 ## Language
 
 - en: recall (excl. TOTAL_MISDECLARED) 82.9% [77.6%, 87.2%] (n=234)
@@ -64,5 +66,5 @@ Recall over violations within deterministic expressive power — denominator EXC
 
 ## Latency
 
-- p50: 0.062 ms
-- p95: 0.123 ms
+- p50: 0.053 ms
+- p95: 0.128 ms

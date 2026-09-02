@@ -44,7 +44,7 @@ import os
 import statistics
 import time
 from datetime import datetime, timezone
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Any
 
@@ -367,6 +367,28 @@ def _summarise(
     }
     field_mismatches: list[dict[str, Any]] = []
 
+    def _equivalent(gold: Any, got: Any) -> bool:
+        """
+        Compare by VALUE, not by string form.
+
+        `str(Decimal("1500.00")) != "1500"` even though both mean the same
+        ceiling, and a naive string compare scored the compiler wrong on every
+        budget it got exactly right. Same trap for datetimes ("+00:00" vs "Z")
+        and for scope lists whose order is incidental.
+        """
+        if gold is None or got is None:
+            return gold is None and got is None
+        for parse in (Decimal, datetime.fromisoformat):
+            try:
+                return parse(str(gold)) == parse(str(got))   # type: ignore[operator]
+            except (InvalidOperation, ValueError, TypeError):
+                continue
+        if isinstance(gold, list) or isinstance(got, list):
+            return sorted(map(str, gold if isinstance(gold, list) else [gold])) == sorted(
+                map(str, got if isinstance(got, list) else [got])
+            )
+        return str(gold) == str(got)
+
     def _score(name: str, seed_id: str, instruction: str, gold: Any, got: Any) -> None:
         if gold is None and got is None:
             field_scores[name]["correct"] += 1
@@ -375,7 +397,7 @@ def _summarise(
             field_scores[name]["missed"] += 1
         elif gold is None and got is not None:
             field_scores[name]["spurious"] += 1
-        elif str(gold) == str(got):
+        elif _equivalent(gold, got):
             field_scores[name]["correct"] += 1
             return
         else:

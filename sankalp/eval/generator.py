@@ -53,7 +53,7 @@ import dataclasses
 import hashlib
 import json
 import random
-import statistics
+import re
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from pathlib import Path
@@ -186,6 +186,60 @@ def _assert_stated_criteria_traceable(seed: Seed) -> None:
                     f"{phrase!r}, which does not appear in instruction_text: "
                     f"{seed.instruction_text!r}"
                 )
+
+
+_TIME_MARKER_RE = re.compile(
+    r"\b\d{1,2}\s*(?::\s*\d{2})?\s*(?:am|pm|baje|bje|o'clock)\b"
+    r"|\bby\s+\d{1,2}\b"
+    r"|\b\d{1,2}\s*(?::\s*\d{2})?\s*tak\b",
+    re.IGNORECASE,
+)
+
+
+def _assert_obligation_fields_traceable(seed: Seed) -> None:
+    """
+    Obligation-level fields must be recoverable from the instruction too.
+
+    WHY THIS EXISTS (added at Stage 4, after it bit)
+    -------------------------------------------------
+    `_assert_stated_criteria_traceable` guards AcceptanceCriteria, and it has
+    worked. But `budget_ceiling`, `delivery_window` and the rest are NOT
+    criteria — they are separate Obligation fields, and nothing checked them.
+
+    During the Stage 2.5 budget-conflict fix, several seeds had their
+    `budget_ceiling` changed to make BUDGET_BREACH fire reliably, and the
+    instruction text was not updated to match. S02 said "under Rs 1600" while
+    gold recorded 1300; S08 said "Rs 1400" while gold recorded 1750; S16 said
+    "Rs 700" while gold recorded 1300. S04 carried a 21:30 deadline its
+    instruction never mentions.
+
+    The Stage 4 compiler then read the user's actual words, got them right, and
+    was scored WRONG — the exact failure the traceability rule exists to
+    prevent, in the fields the rule didn't cover. A ground truth that
+    contradicts its own instruction text is not ground truth.
+    """
+    lowered = seed.instruction_text.lower()
+
+    if seed.budget_ceiling is not None:
+        # Compare on digits only: the instruction writes "Rs 1500", the field
+        # holds Decimal("1500.00"), and neither form should matter.
+        amount = str(int(seed.budget_ceiling))
+        digits_in_instruction = re.findall(r"\d[\d,]*", lowered)
+        normalised = {d.replace(",", "") for d in digits_in_instruction}
+        if amount not in normalised:
+            raise GeneratorError(
+                f"{seed.seed_id}: budget_ceiling is {seed.budget_ceiling} but the amount "
+                f"{amount!r} does not appear in the instruction. A compiler reading the "
+                f"user's words would extract a different ceiling and be scored wrong for "
+                f"being right. Instruction: {seed.instruction_text!r}"
+            )
+
+    if seed.delivery_latest_by is not None and not _TIME_MARKER_RE.search(lowered):
+        raise GeneratorError(
+            f"{seed.seed_id}: delivery_window is set to {seed.delivery_latest_by.isoformat()} "
+            f"but the instruction states no time. A deadline the user never gave cannot be "
+            f"a `stated` obligation. Instruction: {seed.instruction_text!r}"
+        )
 
 
 # ── Mutation results ──────────────────────────────────────────────────────
@@ -585,7 +639,7 @@ def _seeds() -> list[Seed]:
         Seed(
             seed_id="S02-biryani-office-lunch", language="en",
             instruction_text=("Please order 2 Chicken Biryani and 2 Veg Biryani from Biryani House "
-                               "for the office lunch. Try to keep it under ₹1600. Thank you."),
+                               "for the office lunch. Try to keep it under ₹1300. Thank you."),
             merchant_id="rest-biryani", item_names=("chicken biryani", "veg biryani"), quantities=(2, 2),
             criteria=(
                 SeedCriterion("distinct_item_count", CriterionOperator.eq, 2, CriterionSource.stated,
@@ -605,7 +659,7 @@ def _seeds() -> list[Seed]:
         Seed(
             seed_id="S04-biryani-not-oily-hinglish", language="hinglish",
             instruction_text=("Biryani House se chicken biryani, raita aur gulab jamun mangwao, bahut zyada oily "
-                               "nahi hona chahiye, ₹500 se kam mein, jaldi bhejna."),
+                               "nahi hona chahiye, ₹500 se kam mein, raat 9:30 tak bhej dena."),
             merchant_id="rest-biryani", item_names=("chicken biryani", "raita", "gulab jamun"), quantities=(1, 1, 1),
             criteria=(
                 SeedCriterion("item.categories", CriterionOperator.semantic, "not_too_oily", CriterionSource.stated,
@@ -616,7 +670,7 @@ def _seeds() -> list[Seed]:
         ),
         Seed(
             seed_id="S05-biryani-big-cart", language="en",
-            instruction_text="Order one each of everything on the Biryani House menu for the team, keep it under ₹2000.",
+            instruction_text="Order one each of everything on the Biryani House menu for the team, keep it under ₹1700.",
             merchant_id="rest-biryani",
             item_names=("chicken biryani", "mutton biryani", "veg biryani", "raita", "chicken 65", "gulab jamun"),
             quantities=(1, 1, 1, 1, 1, 1),
@@ -643,7 +697,7 @@ def _seeds() -> list[Seed]:
         ),
         Seed(
             seed_id="S08-biryani-chicken65-hinglish", language="hinglish",
-            instruction_text=("Biryani House se 5 chicken 65 order karo, beef bilkul nahi chahiye, ₹1400 se kam "
+            instruction_text=("Biryani House se 5 chicken 65 order karo, beef bilkul nahi chahiye, ₹1750 se kam "
                                "mein, raat 9:30 tak deliver ho jaana chahiye."),
             merchant_id="rest-biryani", item_names=("chicken 65",), quantities=(5,),
             criteria=(
@@ -728,7 +782,7 @@ def _seeds() -> list[Seed]:
         Seed(
             seed_id="S16-southindian-no-chicken", language="hinglish",
             instruction_text=("Saravana Bhavan se 4 masala dosa order karo, chicken bilkul nahi chahiye, "
-                               "₹700 se kam mein, raat 9 baje tak deliver ho jaana chahiye."),
+                               "₹1300 se kam mein, raat 9 baje tak deliver ho jaana chahiye."),
             merchant_id="rest-southindian", item_names=("masala dosa",), quantities=(4,),
             criteria=(
                 SeedCriterion("quantity_sum", CriterionOperator.gte, 4, CriterionSource.stated, phrases=("4 masala dosa",)),
@@ -749,7 +803,7 @@ def _seeds() -> list[Seed]:
             seed_id="S18-southindian-rich", language="en",
             instruction_text=("Order 8 Idli from Saravana Bhavan for the whole team. No chicken, no egg. "
                                "It should be one single item, not mixed. Nothing too oily. Keep it under "
-                               "₹900 and deliver by 9pm."),
+                               "₹2500 and deliver by 9pm."),
             merchant_id="rest-southindian", item_names=("idli",), quantities=(8,),
             criteria=(
                 SeedCriterion("quantity_sum", CriterionOperator.gte, 8, CriterionSource.stated, phrases=("order 8 idli",)),
@@ -802,7 +856,7 @@ def _seeds() -> list[Seed]:
         # ── Punjabi Dhaba (food_delivery) — S23..S29 ────────────────────────
         Seed(
             seed_id="S23-punjabi-scope-budget", language="en",
-            instruction_text=("Order 2 Dal Makhani from Punjabi Dhaba, no chicken, under ₹500, deliver by 9pm."),
+            instruction_text=("Order 2 Dal Makhani from Punjabi Dhaba, no chicken, under ₹750, deliver by 9pm."),
             merchant_id="rest-punjabi", item_names=("dal makhani",), quantities=(2,),
             criteria=(
                 SeedCriterion("quantity_sum", CriterionOperator.gte, 2, CriterionSource.stated, phrases=("order 2 dal makhani",)),
@@ -848,7 +902,7 @@ def _seeds() -> list[Seed]:
         Seed(
             seed_id="S28-punjabi-no-colour-ambiguous", language="en",
             instruction_text=("Order 1 Paneer Tikka and 3 Naan from Punjabi Dhaba, nothing with artificial "
-                               "colour, under ₹450, deliver by 8pm."),
+                               "colour, under ₹600, deliver by 8pm."),
             merchant_id="rest-punjabi", item_names=("paneer tikka", "naan"), quantities=(1, 3),
             criteria=(
                 SeedCriterion("item.categories", CriterionOperator.semantic, "no_artificial_colour", CriterionSource.stated,
@@ -872,7 +926,7 @@ def _seeds() -> list[Seed]:
         # ── FreshMart (grocery) — S30..S37 ──────────────────────────────────
         Seed(
             seed_id="S30-freshmart-no-eggs", language="en",
-            instruction_text=("Order Milk 1L and Basmati Rice 5kg from FreshMart, no eggs, under ₹900, "
+            instruction_text=("Order Milk 1L and Basmati Rice 5kg from FreshMart, no eggs, under ₹1000, "
                                "must arrive by 6pm."),
             merchant_id="grocery-freshmart", item_names=("milk 1l", "basmati rice 5kg"), quantities=(2, 1),
             criteria=(
@@ -907,7 +961,7 @@ def _seeds() -> list[Seed]:
         ),
         Seed(
             seed_id="S33-freshmart-big-cart", language="en",
-            instruction_text="Order one unit of everything from FreshMart for the pantry restock, under ₹1800.",
+            instruction_text="Order one unit of everything from FreshMart for the pantry restock, under ₹1550.",
             merchant_id="grocery-freshmart",
             item_names=("milk 1l", "eggs 12pk", "basmati rice 5kg", "chicken breast 1kg", "toor dal 1kg",
                         "onions 1kg", "tomatoes 1kg", "surprise snack box"),
@@ -953,7 +1007,7 @@ def _seeds() -> list[Seed]:
         # ── DailyBasket (grocery) — S38..S45 ────────────────────────────────
         Seed(
             seed_id="S38-dailybasket-no-mutton", language="en",
-            instruction_text=("Order 2kg Apples and 2 Bread Loaf from DailyBasket, no mutton, under ₹500, "
+            instruction_text=("Order 2kg Apples and 2 Bread Loaf from DailyBasket, no mutton, under ₹1000, "
                                "deliver by 7pm."),
             merchant_id="grocery-dailybasket", item_names=("apples 1kg", "bread loaf"), quantities=(2, 2),
             criteria=(
@@ -964,7 +1018,7 @@ def _seeds() -> list[Seed]:
         ),
         Seed(
             seed_id="S39-dailybasket-no-eggs-hinglish", language="hinglish",
-            instruction_text="DailyBasket se 4 paneer 200g order karo, eggs bilkul nahi chahiye, ₹500 se kam mein.",
+            instruction_text="DailyBasket se 4 paneer 200g order karo, eggs bilkul nahi chahiye, ₹1700 se kam mein.",
             merchant_id="grocery-dailybasket", item_names=("paneer 200g",), quantities=(4,),
             criteria=(
                 SeedCriterion("quantity_sum", CriterionOperator.gte, 4, CriterionSource.stated, phrases=("4 paneer 200g",)),
@@ -1002,7 +1056,7 @@ def _seeds() -> list[Seed]:
         ),
         Seed(
             seed_id="S43-dailybasket-apples-no-mutton", language="en",
-            instruction_text=("Order 5kg Apples from DailyBasket, no mutton, under ₹1000, deliver by 7pm."),
+            instruction_text=("Order 5kg Apples from DailyBasket, no mutton, under ₹2100, deliver by 7pm."),
             merchant_id="grocery-dailybasket", item_names=("apples 1kg",), quantities=(5,),
             criteria=(
                 SeedCriterion("quantity_sum", CriterionOperator.gte, 5, CriterionSource.stated, phrases=("order 5kg apples",)),
@@ -1020,7 +1074,7 @@ def _seeds() -> list[Seed]:
         ),
         Seed(
             seed_id="S45-dailybasket-eggs-no-mutton", language="en",
-            instruction_text="Order 2 Eggs 6pk from DailyBasket, no mutton, under ₹300.",
+            instruction_text="Order 2 Eggs 6pk from DailyBasket, no mutton, under ₹900.",
             merchant_id="grocery-dailybasket", item_names=("eggs 6pk",), quantities=(2,),
             criteria=(
                 SeedCriterion("quantity_sum", CriterionOperator.gte, 2, CriterionSource.stated, phrases=("order 2 eggs 6pk",)),
@@ -1428,6 +1482,7 @@ def build_corpus(global_seed: int) -> list[dict[str, Any]]:
     seeds_by_id = {s.seed_id: s for s in _seeds()}
     for seed in seeds_by_id.values():
         _assert_stated_criteria_traceable(seed)
+        _assert_obligation_fields_traceable(seed)
 
     records: list[dict[str, Any]] = []
 
