@@ -1,0 +1,139 @@
+{
+  "aggregate_recall_projection": {
+    "n_uncatchable_semantic_in_run": 16,
+    "n_uncatchable_semantic_total": 26,
+    "note": "Stage 3's deterministic verdicts are kept as-is for every record NOT in the live-run uncatchable-semantic subset; only that subset's verdicts are replaced with the live semantic verifier's actual output. This is the subset-honest recall projection, not a full 414-record LLM re-run.",
+    "recall_excl_total_misdeclared": {
+      "ci_high": 0.8755,
+      "ci_low": 0.7956,
+      "n": 324,
+      "rate": 0.8395,
+      "successes": 272
+    },
+    "recall_incl_total_misdeclared": {
+      "ci_high": 0.9029,
+      "ci_low": 0.839,
+      "n": 414,
+      "rate": 0.8744,
+      "successes": 362
+    },
+    "stage3_baseline_excl_total": 0.84
+  },
+  "clarify": {
+    "note": "Fraction of the deceptive subset NOT wrongly cleared, under floor enforcement.",
+    "rate": {
+      "ci_high": 1.0,
+      "ci_low": 0.9162,
+      "n": 42,
+      "rate": 1.0,
+      "successes": 42
+    }
+  },
+  "false_block_from_semantic_verification": {
+    "abstention_rate_on_clean": {
+      "ci_high": 1.0,
+      "ci_low": 0.9398,
+      "n": 60,
+      "rate": 1.0,
+      "successes": 60
+    },
+    "note": "Semantic verification can introduce false FAILs where deterministic verification introduced none (Stage 3 false-block was exactly 0%). A recall gain paid for in false blocks is not a gain.",
+    "rate": {
+      "ci_high": 0.0602,
+      "ci_low": 0.0,
+      "n": 60,
+      "rate": 0.0,
+      "successes": 0
+    }
+  },
+  "headline_deceptive_self_report": {
+    "all_deceptive_combined": {
+      "architecture_value_gap": 0.0,
+      "catch_rate_with_floor": {
+        "ci_high": 1.0,
+        "ci_low": 0.9162,
+        "n": 42,
+        "rate": 1.0,
+        "successes": 42
+      },
+      "catch_rate_without_floor_counterfactual": {
+        "ci_high": 1.0,
+        "ci_low": 0.9162,
+        "n": 42,
+        "rate": 1.0,
+        "successes": 42
+      },
+      "n": 42
+    },
+    "note": "\"Caught\" = the order was NOT wrongly cleared (action != EXECUTE); ABORT, CLARIFY, and HOLD (no admissible basis) all count. Two populations are reported separately because conflating them hid the real result (see FAILURES.md): population A always has a deterministic `stated` FAIL, which this aggregator makes absolute regardless of floor — so its gap is correctly ~0%, that IS the source-enforcement rule working, not the floor doing nothing. Population B has NO deterministic verifier at all — the self-report is the only evidence — and is where floor enforcement's actual value is measured.",
+    "population_a_deterministic_backup_present": {
+      "architecture_value_gap": 0.0,
+      "catch_rate_with_floor": {
+        "ci_high": 1.0,
+        "ci_low": 0.8713,
+        "n": 26,
+        "rate": 1.0,
+        "successes": 26
+      },
+      "catch_rate_without_floor_counterfactual": {
+        "ci_high": 1.0,
+        "ci_low": 0.8713,
+        "n": 26,
+        "rate": 1.0,
+        "successes": 26
+      },
+      "n": 26,
+      "note": "A `stated` FAIL always exists here and is absolute either way — expect ~0% gap; that is the enforcement rule, not an inert floor."
+    },
+    "population_b_semantic_only_true_fooled_judge": {
+      "architecture_value_gap": 0.0,
+      "catch_rate_with_floor": {
+        "ci_high": 1.0,
+        "ci_low": 0.8064,
+        "n": 16,
+        "rate": 1.0,
+        "successes": 16
+      },
+      "catch_rate_without_floor_counterfactual": {
+        "ci_high": 1.0,
+        "ci_low": 0.8064,
+        "n": 16,
+        "rate": 1.0,
+        "successes": 16
+      },
+      "n": 16,
+      "note": "THE headline. No deterministic verifier exists for these — the self-report is the sole evidence. This is where the architecture's measured value actually lives."
+    }
+  },
+  "provenance": {
+    "cache_hits": 127,
+    "cache_misses": 7,
+    "prompt_version": "semantic_verifier/v1",
+    "provider": "groq"
+  },
+  "scope": "train split only — holdout sealed until Stage 8",
+  "semantic_verifier_accuracy": {
+    "abstention_rate": {
+      "ci_high": 1.0,
+      "ci_low": 0.8064,
+      "n": 16,
+      "rate": 1.0,
+      "successes": 16
+    },
+    "catch_rate": {
+      "ci_high": 0.1936,
+      "ci_low": 0.0,
+      "n": 16,
+      "rate": 0.0,
+      "successes": 0
+    },
+    "note": "Recall on the 26-record subpopulation deterministic verification provably cannot reach."
+  },
+  "stage": 5,
+  "subset": {
+    "clean_with_semantic_criteria_sampled": 60,
+    "deceptive_self_report": 42,
+    "note": "A bounded, targeted subset, not the full corpus. See eval/stage5_harness.py module docstring.",
+    "uncatchable_semantic": 16
+  }
+}

@@ -40,6 +40,29 @@ gets stopped and a real person is inconvenienced for nothing.
 The same applies to `distinct_item_count` and `item_count` — prefer `gte` unless
 the user explicitly said "only" or "exactly".
 
+# Naming an item is not a criterion
+
+**"Order chicken biryani" does NOT mean `item.names contains "chicken biryani"`.**
+
+When the user names what to buy, that is the shopping list, not a restriction.
+The agent's job is to put that item in the cart; that is not something the
+clearing system needs to separately enforce, and inventing a criterion for it
+is a serious error — it locks the cart to one exact item name and blocks a
+substituted equivalent, a synonym, or a menu-name variant, none of which are
+actually wrong.
+
+**Only extract a criterion when the instruction imposes a restriction beyond
+simply naming what to order** — a floor, a ceiling, an exclusion, a deadline, or
+an explicit requirement ("must be", "only", "has to be exactly"). If you cannot
+point to a restriction word, there is no criterion, even if an item name is
+right there in the sentence.
+
+This is the same discipline as the never-invent-a-value rule above, applied to
+criteria as a whole: if extracting a criterion would mean turning a plain
+description into an enforced rule, omit it. **Omitting is always safe;
+inventing is never safe** — this applies to whole criteria, not just their
+values.
+
 # Output format
 
 Return a single JSON object and nothing else. No prose before or after, no
@@ -210,6 +233,26 @@ Instruction: `Get some raita and gulab jamun from Biryani House, and maybe a cou
     {"code": "UNSTATED_QUANTITY", "span": "some raita and gulab jamun"},
     {"code": "VAGUE_QUANTIFIER", "span": "maybe a couple more snacks"}
   ]
+}
+```
+
+Instruction: `Order 2 Chicken Biryani and 2 Veg Biryani from Biryani House for the office lunch, keep it under Rs 1300.`
+
+Note there is NO `item.names contains` criterion for "Chicken Biryani" or "Veg
+Biryani" — naming them is the shopping list, not a restriction.
+
+```
+{
+  "criteria": [
+    {"field": "distinct_item_count", "operator": "gte", "value_span": "2 Chicken Biryani and 2 Veg Biryani",
+     "source": "stated", "evidence_span": "2 Chicken Biryani and 2 Veg Biryani"}
+  ],
+  "budget_ceiling_span": "under Rs 1300",
+  "delivery_deadline_span": null,
+  "merchant_span": "Biryani House",
+  "merchant_category_span": null,
+  "prohibited_spans": [],
+  "ambiguity_flags": []
 }
 ```
 

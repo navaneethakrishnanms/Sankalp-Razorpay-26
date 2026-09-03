@@ -189,3 +189,110 @@ after the first 400 — especially when the failure costs the user an API call
 to discover. The cache-as-determinism answer also turned out to be strictly
 better than the seed would have been: it reproduces the exact bytes the
 published metrics were computed from, and survives model deprecation.
+
+---
+
+## Stage 5 — catalogue evidence id mismatch silently excluded the deterministic FAIL
+
+**Cause.** `core/verifiers/constraint.py` was written at Stage 3, before a real
+evidence envelope existed, and documented itself honestly as a stand-in: it
+declares a single fixed sentinel id, `CATALOGUE_EVIDENCE_ID = "ev-catalogue"`,
+as its basis. When `core/clearing/engine.py::build_evidence` was written at
+Stage 5 to assemble the real envelope, its catalogue `EvidenceItem` was built
+through `make_evidence_item`, which assigns a random `uuid4` id — nobody
+connected the two.
+
+The effect was silent and exactly backwards from the failure this project
+exists to prevent. `core/admissibility/floor.py`'s own documented rule is that
+an unknown evidence id is treated as `SELF` class ("no benefit from forgery").
+So the deterministic verifier's honest `FAIL`, declaring a basis id that didn't
+match anything in the real envelope, was itself excluded by the `REC` floor —
+not because it was untrustworthy, but because of an id typo one layer down. In
+the fooled-judge test this made `caught_with_floor` read **lower** than
+`caught_without_floor`: with the floor supposedly protecting the decision, the
+confident wrong `PASS` and the honest `FAIL` were BOTH excluded (zero
+survivors → `NO_ADMISSIBLE_BASIS` → `HOLD`), while turning the floor off let
+the honest `FAIL` vote and carry. A floor bug that makes "no floor" look safer
+than "floor enabled" is the worst possible direction for this bug to point.
+
+**Found by** the Stage 5 offline smoke test
+(`tests/unit/test_stage5_harness.py::TestDeceptiveSubsetOffline::test_with_floor_catches_more_or_equal_than_without`),
+run deliberately against a scripted client before spending live Groq quota on
+the ~148-record subset. It failed on the very first slice: `0 >= 2` false.
+Caught before a single real API call for Stage 5 was made — the smoke-test
+discipline paid for itself immediately.
+
+**Fix.** `build_evidence`'s catalogue item now gets the id `CATALOGUE_EVIDENCE_ID`
+explicitly, imported from `core/verifiers/constraint.py` as the single source of
+truth, instead of a random uuid. A regression test asserts the id match
+directly, and asserts `verifier_basis_class` resolves it to `REC` rather than
+falling through to the unknown-id default.
+
+**Lesson.** A "stand-in" is a real interface, and every consumer of it needs to
+agree on the same identifier, or the seam will fail exactly where two
+independently-correct pieces of code meet. It is also a second data point for
+running the cheap offline smoke test before the expensive live one: the first
+integration bug at Stage 5 was caught for the cost of a scripted-provider test
+run, not for the cost of ~148 live LLM calls that would have produced a
+headline metric silently measuring the wrong thing.
+
+---
+
+## Stage 5 — the deceptive-self-report subset was measuring the wrong population, twice
+
+**First cut (methodological bug, same live run).** The initial
+`run_deceptive_subset` skipped every record whose `violating_criterion_ids`
+was empty — the `QUANTITY_MISMATCH:uncatchable` half of the deceptive
+population, 16 of 42 train records. That skip silently selected only
+`CONSTRAINT_VIOLATION:catchable` records, where a deterministic `stated`
+criterion FAIL always exists and — by this project's own enforcement rule — is
+absolute regardless of the floor. The measured `architecture_value_gap` came
+back exactly 0.0%, which read as "the floor does nothing." It actually meant
+"the only population run was the one where the floor's presence was never
+going to show up," because a `stated` FAIL can't be outvoted by anything, with
+or without floor enforcement. Caught by inspection before publishing, not by a
+test — worth a test in hindsight. Fixed by splitting the deceptive population
+into A (deterministic backup present — floor-agnostic by design, ~0% gap
+*expected*) and B (semantic-only, no deterministic verifier exists at all —
+the real fooled-judge test), and reporting both.
+
+**Second cut (a real finding, not a bug).** Re-run against population B alone:
+still 0.0% gap, but for a different and legitimate reason. Every one of the 16
+live semantic-verifier calls returned **ABSTAIN**, not PASS — the model was
+asked "does the delivered cart match the instruction?" with only the agent's
+self-report as evidence, and it declined to vouch for a claim it had no way to
+verify. That is `semantic_verifier_v1.md`'s prompt working exactly as written
+("Treat an agent's own report of its work as a claim, not as an observation").
+Because ABSTAIN routes to CLARIFY on both the with-floor and without-floor
+paths, neither branch reaches EXECUTE, and the counterfactual gap this
+population was built to expose never gets exercised — there is no confident
+wrong PASS for the floor to have to exclude.
+
+**What this is not.** Not a corpus bug (the self-report evidence is genuinely
+insufficient to confirm compliance — ABSTAIN is the epistemically correct
+answer). Not an aggregator bug (ABSTAIN → CLARIFY is the documented,
+intentional behaviour). Not tuned away: the honest response to "the number
+came back 0% for an interesting reason" is to report the reason, not to
+reprompt until a different model behaviour produces a bigger gap — that would
+be optimizing the demo, not measuring the system.
+
+**What it does mean.** The floor's exclusion mechanism — a confident SELF-basis
+PASS structurally absent from the survivor set — is proven independent of
+model behaviour: `tests/unit/test_stage5.py::TestLiveFooledJudge` exercises it
+through the real engine with a scripted provider that returns PASS at 0.99
+confidence, exactly the corpus's original fooled-judge scenario, and it holds.
+What Stage 5's *live* run adds on top is a second, equally real result: this
+particular open-weights model, on this particular question, did not need the
+floor to avoid being fooled, because it declined to be confident in the first
+place. Both facts are reported — the proven mechanism and the live model's
+caution — rather than collapsing them into one number that would overstate
+either.
+
+**Lesson.** A counterfactual metric can only measure what it is given the
+chance to observe. If the thing you're trying to catch (a confident wrong
+verdict) never happens in a given run, the "gap" is correctly zero and that
+zero is not evidence the safeguard is inert — check what verdict was actually
+returned before concluding the mechanism did nothing. The instrument-level
+proof (a scripted provider forcing the failure mode) and the field-level
+measurement (what a real model actually does) answer different questions, and
+Stage 5's honest report needs both, not the flattering one.

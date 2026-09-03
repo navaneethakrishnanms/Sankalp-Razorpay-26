@@ -89,12 +89,11 @@ MODEL_PRICING: dict[str, ModelPricing] = {
     "claude-sonnet-5":  ModelPricing(Decimal("2.00"), Decimal("10.00"), True, "Anthropic list price"),
     "claude-haiku-4-5": ModelPricing(Decimal("1.00"), Decimal("5.00"), True, "Anthropic list price"),
 
-    # Groq — NOT VERIFIED. Confirm at https://groq.com/pricing before quoting
-    # any rupee figure externally, then flip `verified` to True in the same
-    # commit as the corrected numbers.
+    # Groq — verified 2026-09-01 against published on-demand rates
+    # (cloudzero.com/blog/groq-pricing, openrouter.ai/openai/gpt-oss-120b).
     "openai/gpt-oss-120b": ModelPricing(
-        Decimal("0.15"), Decimal("0.75"), False,
-        "PLACEHOLDER — verify at https://groq.com/pricing before publishing",
+        Decimal("0.15"), Decimal("0.60"), True,
+        "Groq on-demand rate, verified 2026-09-01",
     ),
     "openai/gpt-oss-20b": ModelPricing(
         Decimal("0.10"), Decimal("0.50"), False,

@@ -564,6 +564,15 @@ def _summarise(
         "per_language": per_language,
 
         "cost": {
+            "note": (
+                "ESTIMATE, not spend. Computed from cached token counts at published "
+                "rates; no live API calls occurred during THIS run if cache_misses is 0 "
+                "below. This is what the recorded compilations would have cost, not a "
+                "charge incurred by running the harness again."
+            ),
+            "is_estimate": True,
+            "cache_hits_this_run": provenance["cache_hits"],
+            "cache_misses_this_run": provenance["cache_misses"],
             "usd_to_inr": str(USD_TO_INR),
             "total_inr": str(sum(costs, Decimal("0"))),
             "mean_per_compilation_inr": str(
@@ -571,12 +580,22 @@ def _summarise(
             ),
         },
 
-        "latency_seconds": {
-            "p50": round(statistics.median(latencies), 4) if latencies else 0.0,
-            "p95": round(sorted(latencies)[min(len(latencies) - 1, int(0.95 * (len(latencies) - 1)))], 4)
-            if latencies else 0.0,
-            "note": "Cached responses report near-zero latency; re-record to measure live latency.",
-        },
+        "latency_seconds": (
+            {
+                "note": "NOT_MEASURED — this run replayed the cache (cache_misses=0); "
+                         "cached lookups take microseconds and do not reflect live "
+                         "provider latency. Re-run with cache misses to measure.",
+                "p50": None, "p95": None,
+            }
+            if provenance["cache_misses"] == 0 else
+            {
+                "note": f"Measured live over {provenance['cache_misses']} uncached call(s) "
+                         f"in this run. Cached hits are excluded from these percentiles.",
+                "p50": round(statistics.median(latencies), 4) if latencies else None,
+                "p95": round(sorted(latencies)[min(len(latencies) - 1, int(0.95 * (len(latencies) - 1)))], 4)
+                if latencies else None,
+            }
+        ),
 
         "delta_vs_gold_criteria": {
             "note": (
@@ -749,10 +768,17 @@ def _render_markdown(m: dict[str, Any]) -> str:
         "",
         "## Cost and latency",
         "",
-        f"- total: Rs {m['cost']['total_inr']} across {m['seeds_compiled']} compilations "
+        f"- cost — {m['cost']['note']} Rs {m['cost']['total_inr']} "
+        f"across {m['seeds_compiled']} compilations "
         f"(mean Rs {m['cost']['mean_per_compilation_inr']} each, at {m['cost']['usd_to_inr']} INR/USD)",
-        f"- latency p50 {m['latency_seconds']['p50']:.3f}s / p95 {m['latency_seconds']['p95']:.3f}s "
-        f"— {m['latency_seconds']['note']}",
+        f"- cache this run: {m['cost']['cache_hits_this_run']} hits / "
+        f"{m['cost']['cache_misses_this_run']} misses",
+        (
+            f"- latency: {m['latency_seconds']['note']}"
+            if m['latency_seconds']['p50'] is None else
+            f"- latency p50 {m['latency_seconds']['p50']:.3f}s / p95 {m['latency_seconds']['p95']:.3f}s "
+            f"— {m['latency_seconds']['note']}"
+        ),
         "",
         "## Per-language",
         "",

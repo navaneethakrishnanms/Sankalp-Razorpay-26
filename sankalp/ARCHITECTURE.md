@@ -7,6 +7,46 @@ deliverable, per the build order) — it exists so decisions made along the
 way are traceable to a reason instead of being rediscovered by accident
 later.
 
+## The model never declares its own evidence basis — the code does
+
+**The decision.** `core/verifiers/semantic.py::verify_semantic_criterion` does
+not ask the LLM for `declared_basis`, and does not validate a model-supplied
+one — it does not read that field from the model's JSON at all. `declared_basis`
+is set entirely by the calling code, from the ids of the evidence objects it
+actually placed in the prompt. Confirmed even when the model volunteers a
+`declared_basis` field claiming stronger evidence than it was given
+(`tests/unit/test_stage5.py::TestDeclaredBasisHonesty::test_model_cannot_inflate_its_basis`):
+the claim is silently ignored.
+
+**Why this is the decision that makes floor enforcement load-bearing rather
+than decorative.** Floor enforcement's entire mechanism —
+`apply_floor` partitioning survivors before `join` ever runs — depends on one
+premise: that a verifier's declared basis accurately reflects what it actually
+looked at. If that premise could be violated by the verifier itself (a model
+that says "I checked the catalogue" while it was actually handed only a
+self-report), the floor would filter on a lie and admit exactly the evidence
+it exists to exclude. A verifier that could overstate its own basis would make
+the non-promotion invariant unenforceable from the inside, no matter how
+correct `apply_floor`'s code is.
+
+Validating a model-supplied basis (rejecting an inconsistent one, say) would
+still leave the trust boundary in the wrong place — it would mean "the model's
+claim is checked", not "the model has no claim to make." Removing the field
+from the model's vocabulary entirely removes the attack surface rather than
+policing it. This is the same move as the output validator's span-quoting rule
+for the obligation compiler (never let the model author a value it could get
+wrong or lie about; only let it point at something the surrounding code can
+verify independently) applied to the one value that floor enforcement itself
+depends on.
+
+**Consequence, concretely.** The live fooled-judge case
+(`core/clearing/engine.py::build_evidence`,
+`tests/unit/test_stage5.py::TestLiveFooledJudge`) works because when the
+semantic verifier is handed only a `SELF`-class self-report, its output's
+`declared_basis` is provably `[<that self-report's id>]` — not because the
+model was well-behaved, but because it was never given the option to say
+otherwise.
+
 ## Deviation: `VerifierOutput.declared_basis` defaults to `SELF`, not a hard error
 
 **What the original spec said:** a verifier must explicitly declare its

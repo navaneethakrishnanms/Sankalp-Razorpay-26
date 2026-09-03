@@ -1,77 +1,70 @@
 {
   "ambiguity_detection": {
     "false_negatives": 0,
-    "false_positives": 7,
+    "false_positives": 1,
     "note": "instruction_ambiguous was assigned per-seed by hand during corpus authoring from an intuitive reading, not a written-down rule — it is the noisiest label in the corpus. Read these as agreement with the author's intuition, not as ground truth.",
     "precision": {
-      "ci_high": 0.6462,
-      "ci_low": 0.1517,
-      "n": 11,
-      "rate": 0.3636,
-      "successes": 4
+      "ci_high": 0.7935,
+      "ci_low": 0.0,
+      "n": 1,
+      "rate": 0.0,
+      "successes": 0
     },
     "recall": {
-      "ci_high": 1.0,
-      "ci_low": 0.5101,
-      "n": 4,
-      "rate": 1.0,
-      "successes": 4
+      "ci_high": 0.0,
+      "ci_low": 0.0,
+      "n": 0,
+      "rate": 0.0,
+      "successes": 0
     },
-    "true_positives": 4
+    "true_positives": 0
   },
   "cost": {
-    "mean_per_compilation_inr": "0.08870101935483870967741935484",
-    "total_inr": "2.749731600",
+    "mean_per_compilation_inr": "0.084928800",
+    "total_inr": "0.254786400",
     "usd_to_inr": "88.0"
   },
   "criterion_extraction": {
-    "captured": 20,
-    "gold_criteria": 37,
-    "invented": 22,
-    "missed": 17,
+    "captured": 2,
+    "gold_criteria": 4,
+    "invented": 3,
+    "missed": 2,
     "note": "Matched on (field, operator, value). SEMANTIC criteria are matched on (field, operator) only — their corpus value is a hand-authored label ('not_too_spicy') the compiler cannot reproduce without authoring a value, which the output guard forbids. Semantic extraction is therefore measured more coarsely than the rest.",
     "precision": {
-      "ci_high": 0.6228,
-      "ci_low": 0.3336,
-      "n": 42,
-      "rate": 0.4762,
-      "successes": 20
+      "ci_high": 0.7693,
+      "ci_low": 0.1176,
+      "n": 5,
+      "rate": 0.4,
+      "successes": 2
     },
     "recall": {
-      "ci_high": 0.6896,
-      "ci_low": 0.3838,
-      "n": 37,
-      "rate": 0.5405,
-      "successes": 20
+      "ci_high": 0.85,
+      "ci_low": 0.15,
+      "n": 4,
+      "rate": 0.5,
+      "successes": 2
     }
   },
   "delta_vs_gold_criteria": {
     "compiled_false_block": {
-      "ci_high": 0.1253,
-      "ci_low": 0.0791,
-      "n": 651,
-      "rate": 0.0998,
-      "successes": 65
+      "ci_high": 0.2497,
+      "ci_low": 0.077,
+      "n": 63,
+      "rate": 0.1429,
+      "successes": 9
     },
     "compiled_recall": {
-      "ci_high": 0.9213,
-      "ci_low": 0.8494,
-      "n": 292,
-      "rate": 0.8904,
-      "successes": 260
+      "ci_high": 0.943,
+      "ci_low": 0.6851,
+      "n": 28,
+      "rate": 0.8571,
+      "successes": 24
     },
     "false_block_attribution": {
       "criterion:item.names contains 'chicken biryani'": 3,
-      "criterion:item.names contains 'dal makhani'": 4,
-      "criterion:item.names contains 'masala dosa'": 6,
-      "criterion:min_item_quantity eq 2": 2,
-      "criterion:quantity_sum eq 10": 6,
-      "criterion:quantity_sum eq 2": 14,
-      "criterion:quantity_sum eq 3": 18,
-      "criterion:quantity_sum eq 4": 9,
-      "criterion:quantity_sum eq 6": 3
+      "criterion:quantity_sum eq 2": 6
     },
-    "false_block_delta": 0.0998,
+    "false_block_delta": 0.1429,
     "false_block_examples": [
       {
         "causes": [
@@ -135,184 +128,96 @@
         ],
         "clean_mutation": "_clean_bump",
         "order_id": "S03-biryani-category-scope::CLEAN::8"
-      },
-      {
-        "causes": [
-          "criterion:quantity_sum eq 3"
-        ],
-        "clean_mutation": "_clean_bump",
-        "order_id": "S06-biryani-no-mutton-terse::CLEAN::1"
       }
     ],
     "gold_false_block": {
-      "ci_high": 0.0059,
+      "ci_high": 0.0575,
       "ci_low": 0.0,
-      "n": 651,
+      "n": 63,
       "rate": 0.0,
       "successes": 0
     },
     "gold_recall": {
-      "ci_high": 0.9271,
-      "ci_low": 0.8571,
-      "n": 292,
-      "rate": 0.8973,
-      "successes": 262
+      "ci_high": 0.943,
+      "ci_low": 0.6851,
+      "n": 28,
+      "rate": 0.8571,
+      "successes": 24
     },
-    "n_clean": 651,
-    "n_violations": 292,
+    "n_clean": 63,
+    "n_violations": 28,
     "note": "Stage 3 verifiers run over the same train records twice — once with hand-authored obligations, once with compiled ones. This is the compiler's true cost at the point of decision.",
-    "recall_delta": -0.0068
+    "recall_delta": 0.0
   },
   "latency_seconds": {
     "note": "Cached responses report near-zero latency; re-record to measure live latency.",
-    "p50": 0.0034,
-    "p95": 44.0638
+    "p50": 0.0023,
+    "p95": 0.0023
   },
   "obligation_field_extraction": {
     "accuracy": {
       "budget_ceiling": {
-        "ci_high": 0.9943,
-        "ci_low": 0.8381,
-        "n": 31,
-        "rate": 0.9677,
-        "successes": 30
+        "ci_high": 1.0,
+        "ci_low": 0.4385,
+        "n": 3,
+        "rate": 1.0,
+        "successes": 3
       },
       "delivery_window": {
         "ci_high": 1.0,
-        "ci_low": 0.8897,
-        "n": 31,
+        "ci_low": 0.4385,
+        "n": 3,
         "rate": 1.0,
-        "successes": 31
+        "successes": 3
       },
       "merchant_scope": {
-        "ci_high": 0.863,
-        "ci_low": 0.5675,
-        "n": 31,
-        "rate": 0.7419,
-        "successes": 23
+        "ci_high": 1.0,
+        "ci_low": 0.4385,
+        "n": 3,
+        "rate": 1.0,
+        "successes": 3
       }
     },
     "counts": {
       "budget_ceiling": {
-        "correct": 30,
-        "missed": 1,
+        "correct": 3,
+        "missed": 0,
         "spurious": 0,
         "wrong_value": 0
       },
       "delivery_window": {
-        "correct": 31,
+        "correct": 3,
         "missed": 0,
         "spurious": 0,
         "wrong_value": 0
       },
       "merchant_scope": {
-        "correct": 23,
-        "missed": 1,
-        "spurious": 7,
+        "correct": 3,
+        "missed": 0,
+        "spurious": 0,
         "wrong_value": 0
       }
     },
-    "mismatches": [
-      {
-        "compiled": "['rest-biryani']",
-        "field": "merchant_scope",
-        "gold": "None",
-        "instruction": "Biryani House se chicken biryani, raita aur gulab jamun mangwao, bahut zyada oily nahi hona chahiye, ₹500 se kam mein, raat 9:30 tak bhej dena.",
-        "seed_id": "S04-biryani-not-oily-hinglish"
-      },
-      {
-        "compiled": "['rest-southindian']",
-        "field": "merchant_scope",
-        "gold": "None",
-        "instruction": "Order 4 Idli and 2 Filter Coffee from Saravana Bhavan, under ₹450, by 7pm.",
-        "seed_id": "S17-southindian-idli-coffee"
-      },
-      {
-        "compiled": "None",
-        "field": "merchant_scope",
-        "gold": "food_delivery",
-        "instruction": "Saravana Bhavan jaisi kisi bhi jagah se masala dosa, idli aur filter coffee order karo, garam garam serve hona chahiye.",
-        "seed_id": "S19-southindian-served-hot-category"
-      },
-      {
-        "compiled": "['rest-southindian']",
-        "field": "merchant_scope",
-        "gold": "None",
-        "instruction": "Order 2 Chicken Chettinad from Saravana Bhavan, under ₹600, deliver by 8:30pm.",
-        "seed_id": "S20-southindian-chettinad"
-      },
-      {
-        "compiled": "['rest-southindian']",
-        "field": "merchant_scope",
-        "gold": "None",
-        "instruction": "Saravana Bhavan se 6 filter coffee order karo, ₹300 se kam mein.",
-        "seed_id": "S22-southindian-coffee-hinglish"
-      },
-      {
-        "compiled": "None",
-        "field": "budget_ceiling",
-        "gold": "700.00",
-        "instruction": "Punjabi Dhaba se 2 Dal Makhani aur 2 Naan mangwao, ₹700 se zyada nahi hona chahiye.",
-        "seed_id": "S24-punjabi-hinglish-budget"
-      },
-      {
-        "compiled": "['rest-punjabi']",
-        "field": "merchant_scope",
-        "gold": "None",
-        "instruction": "Punjabi Dhaba se 10 naan order karo, ₹500 se kam mein.",
-        "seed_id": "S27-punjabi-naan-hinglish"
-      },
-      {
-        "compiled": "['rest-punjabi']",
-        "field": "merchant_scope",
-        "gold": "None",
-        "instruction": "Order 1 Paneer Tikka and 3 Naan from Punjabi Dhaba, nothing with artificial colour, under ₹600, deliver by 8pm.",
-        "seed_id": "S28-punjabi-no-colour-ambiguous"
-      },
-      {
-        "compiled": "['grocery-dailybasket']",
-        "field": "merchant_scope",
-        "gold": "None",
-        "instruction": "Order 2 Eggs 6pk from DailyBasket, no mutton, under ₹900.",
-        "seed_id": "S45-dailybasket-eggs-no-mutton"
-      }
-    ],
+    "mismatches": [],
     "note": "budget_ceiling, merchant_scope and delivery_window are not AcceptanceCriteria but drive four of the six violation classes. 'spurious' means the compiler invented a limit the user never set — the most expensive error here, because it blocks correct orders."
   },
   "per_language": {
     "en": {
       "extraction_precision": {
-        "ci_high": 0.7349,
-        "ci_low": 0.3907,
-        "n": 28,
-        "rate": 0.5714,
-        "successes": 16
+        "ci_high": 0.7693,
+        "ci_low": 0.1176,
+        "n": 5,
+        "rate": 0.4,
+        "successes": 2
       },
       "extraction_recall": {
-        "ci_high": 0.7757,
-        "ci_low": 0.4253,
-        "n": 26,
-        "rate": 0.6154,
-        "successes": 16
+        "ci_high": 0.85,
+        "ci_low": 0.15,
+        "n": 4,
+        "rate": 0.5,
+        "successes": 2
       },
-      "seeds": 22
-    },
-    "hinglish": {
-      "extraction_precision": {
-        "ci_high": 0.5465,
-        "ci_low": 0.1172,
-        "n": 14,
-        "rate": 0.2857,
-        "successes": 4
-      },
-      "extraction_recall": {
-        "ci_high": 0.6462,
-        "ci_low": 0.1517,
-        "n": 11,
-        "rate": 0.3636,
-        "successes": 4
-      },
-      "seeds": 9
+      "seeds": 3
     }
   },
   "per_seed": [
@@ -463,1314 +368,11 @@
       "predicted_ambiguous": true,
       "seed_id": "S03-biryani-category-scope",
       "unresolvable_paths": []
-    },
-    {
-      "captured": 0,
-      "compiled_budget_ceiling": "500",
-      "compiled_criteria": [],
-      "compiled_delivery_latest_by": "2026-08-28T21:30:00+00:00",
-      "compiled_merchant_scope": {
-        "category": null,
-        "merchant_ids": [
-          "rest-biryani"
-        ]
-      },
-      "compiled_prohibited": [],
-      "dropped": [],
-      "gold_ambiguous": false,
-      "gold_budget_ceiling": "500.00",
-      "gold_criteria": [
-        {
-          "field": "item.categories",
-          "operator": "semantic",
-          "source": "stated",
-          "value": "not_too_oily"
-        }
-      ],
-      "gold_merchant_scope": {
-        "category": null,
-        "merchant_ids": []
-      },
-      "instruction": "Biryani House se chicken biryani, raita aur gulab jamun mangwao, bahut zyada oily nahi hona chahiye, ₹500 se kam mein, raat 9:30 tak bhej dena.",
-      "invented": 0,
-      "language": "hinglish",
-      "missed": 1,
-      "predicted_ambiguous": true,
-      "seed_id": "S04-biryani-not-oily-hinglish",
-      "unresolvable_paths": []
-    },
-    {
-      "captured": 1,
-      "compiled_budget_ceiling": null,
-      "compiled_criteria": [
-        {
-          "field": "quantity_sum",
-          "operator": "eq",
-          "source": "stated",
-          "value": 3
-        },
-        {
-          "field": "item.ingredients",
-          "operator": "excludes",
-          "source": "stated",
-          "value": "mutton"
-        }
-      ],
-      "compiled_delivery_latest_by": null,
-      "compiled_merchant_scope": {
-        "category": null,
-        "merchant_ids": []
-      },
-      "compiled_prohibited": [
-        "mutton"
-      ],
-      "dropped": [],
-      "gold_ambiguous": false,
-      "gold_budget_ceiling": null,
-      "gold_criteria": [
-        {
-          "field": "quantity_sum",
-          "operator": "gte",
-          "source": "stated",
-          "value": 3
-        },
-        {
-          "field": "item.ingredients",
-          "operator": "excludes",
-          "source": "stated",
-          "value": "mutton"
-        }
-      ],
-      "gold_merchant_scope": {
-        "category": null,
-        "merchant_ids": []
-      },
-      "instruction": "3 veg biryani, mutton bilkul mat dena.",
-      "invented": 1,
-      "language": "hinglish",
-      "missed": 1,
-      "predicted_ambiguous": true,
-      "seed_id": "S06-biryani-no-mutton-terse",
-      "unresolvable_paths": []
-    },
-    {
-      "captured": 0,
-      "compiled_budget_ceiling": "400",
-      "compiled_criteria": [],
-      "compiled_delivery_latest_by": "2026-08-28T20:30:00+00:00",
-      "compiled_merchant_scope": {
-        "category": null,
-        "merchant_ids": [
-          "rest-biryani"
-        ]
-      },
-      "compiled_prohibited": [],
-      "dropped": [],
-      "gold_ambiguous": true,
-      "gold_budget_ceiling": "400.00",
-      "gold_criteria": [],
-      "gold_merchant_scope": {
-        "category": null,
-        "merchant_ids": [
-          "rest-biryani"
-        ]
-      },
-      "instruction": "Get some raita and gulab jamun from Biryani House, and maybe a couple more snacks if it still fits under ₹400, deliver by 8:30pm.",
-      "invented": 0,
-      "language": "en",
-      "missed": 0,
-      "predicted_ambiguous": true,
-      "seed_id": "S07-biryani-snacks-ambiguous",
-      "unresolvable_paths": []
-    },
-    {
-      "captured": 2,
-      "compiled_budget_ceiling": "1750",
-      "compiled_criteria": [
-        {
-          "field": "quantity_sum",
-          "operator": "gte",
-          "source": "stated",
-          "value": 5
-        },
-        {
-          "field": "item.ingredients",
-          "operator": "excludes",
-          "source": "stated",
-          "value": "beef"
-        }
-      ],
-      "compiled_delivery_latest_by": "2026-08-28T21:30:00+00:00",
-      "compiled_merchant_scope": {
-        "category": null,
-        "merchant_ids": [
-          "rest-biryani"
-        ]
-      },
-      "compiled_prohibited": [
-        "beef"
-      ],
-      "dropped": [],
-      "gold_ambiguous": false,
-      "gold_budget_ceiling": "1750.00",
-      "gold_criteria": [
-        {
-          "field": "quantity_sum",
-          "operator": "gte",
-          "source": "stated",
-          "value": 5
-        },
-        {
-          "field": "item.ingredients",
-          "operator": "excludes",
-          "source": "stated",
-          "value": "beef"
-        }
-      ],
-      "gold_merchant_scope": {
-        "category": null,
-        "merchant_ids": [
-          "rest-biryani"
-        ]
-      },
-      "instruction": "Biryani House se 5 chicken 65 order karo, beef bilkul nahi chahiye, ₹1750 se kam mein, raat 9:30 tak deliver ho jaana chahiye.",
-      "invented": 0,
-      "language": "hinglish",
-      "missed": 0,
-      "predicted_ambiguous": false,
-      "seed_id": "S08-biryani-chicken65-hinglish",
-      "unresolvable_paths": []
-    },
-    {
-      "captured": 1,
-      "compiled_budget_ceiling": "900",
-      "compiled_criteria": [
-        {
-          "field": "quantity_sum",
-          "operator": "eq",
-          "source": "stated",
-          "value": 2
-        },
-        {
-          "field": "item.ingredients",
-          "operator": "excludes",
-          "source": "stated",
-          "value": "pork"
-        }
-      ],
-      "compiled_delivery_latest_by": "2026-08-28T20:00:00+00:00",
-      "compiled_merchant_scope": {
-        "category": null,
-        "merchant_ids": [
-          "rest-pizza"
-        ]
-      },
-      "compiled_prohibited": [
-        "pork"
-      ],
-      "dropped": [],
-      "gold_ambiguous": false,
-      "gold_budget_ceiling": "900.00",
-      "gold_criteria": [
-        {
-          "field": "quantity_sum",
-          "operator": "gte",
-          "source": "stated",
-          "value": 2
-        },
-        {
-          "field": "item.ingredients",
-          "operator": "excludes",
-          "source": "stated",
-          "value": "pork"
-        }
-      ],
-      "gold_merchant_scope": {
-        "category": null,
-        "merchant_ids": [
-          "rest-pizza"
-        ]
-      },
-      "instruction": "Order 2 Margherita from Pizza Point. No pork. Keep it under ₹900. Deliver by 8pm.",
-      "invented": 1,
-      "language": "en",
-      "missed": 1,
-      "predicted_ambiguous": false,
-      "seed_id": "S09-pizza-margherita-2",
-      "unresolvable_paths": []
-    },
-    {
-      "captured": 0,
-      "compiled_budget_ceiling": "500",
-      "compiled_criteria": [],
-      "compiled_delivery_latest_by": null,
-      "compiled_merchant_scope": {
-        "category": null,
-        "merchant_ids": []
-      },
-      "compiled_prohibited": [],
-      "dropped": [],
-      "gold_ambiguous": false,
-      "gold_budget_ceiling": "500.00",
-      "gold_criteria": [],
-      "gold_merchant_scope": {
-        "category": null,
-        "merchant_ids": []
-      },
-      "instruction": "Order 2 Garlic Bread and 2 Coke 500ml, keep it under ₹500.",
-      "invented": 0,
-      "language": "en",
-      "missed": 0,
-      "predicted_ambiguous": false,
-      "seed_id": "S11-pizza-garlic-coke",
-      "unresolvable_paths": []
-    },
-    {
-      "captured": 1,
-      "compiled_budget_ceiling": "1200",
-      "compiled_criteria": [
-        {
-          "field": "item.ingredients",
-          "operator": "excludes",
-          "source": "stated",
-          "value": "pork"
-        }
-      ],
-      "compiled_delivery_latest_by": "2026-08-28T21:00:00+00:00",
-      "compiled_merchant_scope": {
-        "category": "food_delivery",
-        "merchant_ids": []
-      },
-      "compiled_prohibited": [
-        "pork"
-      ],
-      "dropped": [
-        "merchant_span: 'any food delivery place' matched no catalogue merchant"
-      ],
-      "gold_ambiguous": false,
-      "gold_budget_ceiling": "1200.00",
-      "gold_criteria": [
-        {
-          "field": "item.ingredients",
-          "operator": "excludes",
-          "source": "stated",
-          "value": "pork"
-        }
-      ],
-      "gold_merchant_scope": {
-        "category": "food_delivery",
-        "merchant_ids": []
-      },
-      "instruction": "Order a Margherita, Garlic Bread, Veggie Delight and a Coke 500ml from any food delivery place. No pork. Keep it under ₹1200. Deliver by 9pm.",
-      "invented": 0,
-      "language": "en",
-      "missed": 0,
-      "predicted_ambiguous": true,
-      "seed_id": "S12-pizza-4item-category",
-      "unresolvable_paths": []
-    },
-    {
-      "captured": 0,
-      "compiled_budget_ceiling": null,
-      "compiled_criteria": [
-        {
-          "field": "quantity_sum",
-          "operator": "eq",
-          "source": "stated",
-          "value": 3
-        }
-      ],
-      "compiled_delivery_latest_by": "2026-08-28T21:00:00+00:00",
-      "compiled_merchant_scope": {
-        "category": null,
-        "merchant_ids": [
-          "rest-pizza"
-        ]
-      },
-      "compiled_prohibited": [],
-      "dropped": [],
-      "gold_ambiguous": false,
-      "gold_budget_ceiling": null,
-      "gold_criteria": [
-        {
-          "field": "quantity_sum",
-          "operator": "gte",
-          "source": "stated",
-          "value": 3
-        }
-      ],
-      "gold_merchant_scope": {
-        "category": null,
-        "merchant_ids": [
-          "rest-pizza"
-        ]
-      },
-      "instruction": "Pizza Point se 3 chicken supreme order karo, raat 9 baje tak deliver ho jaana chahiye.",
-      "invented": 1,
-      "language": "hinglish",
-      "missed": 1,
-      "predicted_ambiguous": false,
-      "seed_id": "S13-pizza-chicken-supreme-hinglish",
-      "unresolvable_paths": []
-    },
-    {
-      "captured": 1,
-      "compiled_budget_ceiling": "1300",
-      "compiled_criteria": [
-        {
-          "field": "quantity_sum",
-          "operator": "eq",
-          "source": "stated",
-          "value": 4
-        },
-        {
-          "field": "item.ingredients",
-          "operator": "excludes",
-          "source": "stated",
-          "value": "chicken"
-        }
-      ],
-      "compiled_delivery_latest_by": "2026-08-28T21:00:00+00:00",
-      "compiled_merchant_scope": {
-        "category": null,
-        "merchant_ids": [
-          "rest-southindian"
-        ]
-      },
-      "compiled_prohibited": [
-        "chicken"
-      ],
-      "dropped": [],
-      "gold_ambiguous": false,
-      "gold_budget_ceiling": "1300.00",
-      "gold_criteria": [
-        {
-          "field": "quantity_sum",
-          "operator": "gte",
-          "source": "stated",
-          "value": 4
-        },
-        {
-          "field": "item.ingredients",
-          "operator": "excludes",
-          "source": "stated",
-          "value": "chicken"
-        }
-      ],
-      "gold_merchant_scope": {
-        "category": null,
-        "merchant_ids": [
-          "rest-southindian"
-        ]
-      },
-      "instruction": "Saravana Bhavan se 4 masala dosa order karo, chicken bilkul nahi chahiye, ₹1300 se kam mein, raat 9 baje tak deliver ho jaana chahiye.",
-      "invented": 1,
-      "language": "hinglish",
-      "missed": 1,
-      "predicted_ambiguous": false,
-      "seed_id": "S16-southindian-no-chicken",
-      "unresolvable_paths": []
-    },
-    {
-      "captured": 0,
-      "compiled_budget_ceiling": "450",
-      "compiled_criteria": [
-        {
-          "field": "max_item_quantity",
-          "operator": "eq",
-          "source": "stated",
-          "value": 4
-        },
-        {
-          "field": "min_item_quantity",
-          "operator": "eq",
-          "source": "stated",
-          "value": 2
-        }
-      ],
-      "compiled_delivery_latest_by": "2026-08-28T19:00:00+00:00",
-      "compiled_merchant_scope": {
-        "category": null,
-        "merchant_ids": [
-          "rest-southindian"
-        ]
-      },
-      "compiled_prohibited": [],
-      "dropped": [],
-      "gold_ambiguous": false,
-      "gold_budget_ceiling": "450.00",
-      "gold_criteria": [],
-      "gold_merchant_scope": {
-        "category": null,
-        "merchant_ids": []
-      },
-      "instruction": "Order 4 Idli and 2 Filter Coffee from Saravana Bhavan, under ₹450, by 7pm.",
-      "invented": 2,
-      "language": "en",
-      "missed": 0,
-      "predicted_ambiguous": false,
-      "seed_id": "S17-southindian-idli-coffee",
-      "unresolvable_paths": []
-    },
-    {
-      "captured": 0,
-      "compiled_budget_ceiling": null,
-      "compiled_criteria": [
-        {
-          "field": "item.names",
-          "operator": "contains",
-          "source": "stated",
-          "value": "masala dosa"
-        },
-        {
-          "field": "item.names",
-          "operator": "contains",
-          "source": "stated",
-          "value": "idli"
-        },
-        {
-          "field": "item.names",
-          "operator": "contains",
-          "source": "stated",
-          "value": "filter coffee"
-        }
-      ],
-      "compiled_delivery_latest_by": null,
-      "compiled_merchant_scope": {
-        "category": null,
-        "merchant_ids": []
-      },
-      "compiled_prohibited": [],
-      "dropped": [],
-      "gold_ambiguous": true,
-      "gold_budget_ceiling": null,
-      "gold_criteria": [
-        {
-          "field": "item.categories",
-          "operator": "semantic",
-          "source": "stated",
-          "value": "served_hot"
-        }
-      ],
-      "gold_merchant_scope": {
-        "category": "food_delivery",
-        "merchant_ids": []
-      },
-      "instruction": "Saravana Bhavan jaisi kisi bhi jagah se masala dosa, idli aur filter coffee order karo, garam garam serve hona chahiye.",
-      "invented": 3,
-      "language": "hinglish",
-      "missed": 1,
-      "predicted_ambiguous": true,
-      "seed_id": "S19-southindian-served-hot-category",
-      "unresolvable_paths": []
-    },
-    {
-      "captured": 0,
-      "compiled_budget_ceiling": "600",
-      "compiled_criteria": [
-        {
-          "field": "quantity_sum",
-          "operator": "eq",
-          "source": "stated",
-          "value": 2
-        }
-      ],
-      "compiled_delivery_latest_by": "2026-08-28T20:30:00+00:00",
-      "compiled_merchant_scope": {
-        "category": null,
-        "merchant_ids": [
-          "rest-southindian"
-        ]
-      },
-      "compiled_prohibited": [],
-      "dropped": [],
-      "gold_ambiguous": false,
-      "gold_budget_ceiling": "600.00",
-      "gold_criteria": [
-        {
-          "field": "quantity_sum",
-          "operator": "gte",
-          "source": "stated",
-          "value": 2
-        }
-      ],
-      "gold_merchant_scope": {
-        "category": null,
-        "merchant_ids": []
-      },
-      "instruction": "Order 2 Chicken Chettinad from Saravana Bhavan, under ₹600, deliver by 8:30pm.",
-      "invented": 1,
-      "language": "en",
-      "missed": 1,
-      "predicted_ambiguous": false,
-      "seed_id": "S20-southindian-chettinad",
-      "unresolvable_paths": []
-    },
-    {
-      "captured": 0,
-      "compiled_budget_ceiling": "300",
-      "compiled_criteria": [
-        {
-          "field": "quantity_sum",
-          "operator": "eq",
-          "source": "stated",
-          "value": 6
-        }
-      ],
-      "compiled_delivery_latest_by": null,
-      "compiled_merchant_scope": {
-        "category": null,
-        "merchant_ids": [
-          "rest-southindian"
-        ]
-      },
-      "compiled_prohibited": [],
-      "dropped": [],
-      "gold_ambiguous": false,
-      "gold_budget_ceiling": "300.00",
-      "gold_criteria": [
-        {
-          "field": "quantity_sum",
-          "operator": "gte",
-          "source": "stated",
-          "value": 6
-        }
-      ],
-      "gold_merchant_scope": {
-        "category": null,
-        "merchant_ids": []
-      },
-      "instruction": "Saravana Bhavan se 6 filter coffee order karo, ₹300 se kam mein.",
-      "invented": 1,
-      "language": "hinglish",
-      "missed": 1,
-      "predicted_ambiguous": false,
-      "seed_id": "S22-southindian-coffee-hinglish",
-      "unresolvable_paths": []
-    },
-    {
-      "captured": 0,
-      "compiled_budget_ceiling": null,
-      "compiled_criteria": [
-        {
-          "field": "item.names",
-          "operator": "contains",
-          "source": "stated",
-          "value": "dal makhani"
-        },
-        {
-          "field": "item.names",
-          "operator": "contains",
-          "source": "stated",
-          "value": "naan"
-        }
-      ],
-      "compiled_delivery_latest_by": null,
-      "compiled_merchant_scope": {
-        "category": null,
-        "merchant_ids": [
-          "rest-punjabi"
-        ]
-      },
-      "compiled_prohibited": [],
-      "dropped": [
-        "budget_ceiling_span: budget_ceiling_span: span '₹700 se zyada नहीं होना chahiye' does not appear in the instruction. The model may only quote the user's own words, never author a value. Instruction: 'Punjabi Dhaba se 2 Dal Makhani aur 2 Naan mangwao, ₹700 se zyada nahi hona chahiye.'"
-      ],
-      "gold_ambiguous": false,
-      "gold_budget_ceiling": "700.00",
-      "gold_criteria": [],
-      "gold_merchant_scope": {
-        "category": null,
-        "merchant_ids": [
-          "rest-punjabi"
-        ]
-      },
-      "instruction": "Punjabi Dhaba se 2 Dal Makhani aur 2 Naan mangwao, ₹700 se zyada nahi hona chahiye.",
-      "invented": 2,
-      "language": "hinglish",
-      "missed": 0,
-      "predicted_ambiguous": false,
-      "seed_id": "S24-punjabi-hinglish-budget",
-      "unresolvable_paths": []
-    },
-    {
-      "captured": 1,
-      "compiled_budget_ceiling": null,
-      "compiled_criteria": [
-        {
-          "field": "quantity_sum",
-          "operator": "eq",
-          "source": "stated",
-          "value": 3
-        },
-        {
-          "field": "item.ingredients",
-          "operator": "excludes",
-          "source": "stated",
-          "value": "mutton"
-        }
-      ],
-      "compiled_delivery_latest_by": "2026-08-28T21:00:00+00:00",
-      "compiled_merchant_scope": {
-        "category": "food_delivery",
-        "merchant_ids": []
-      },
-      "compiled_prohibited": [
-        "mutton"
-      ],
-      "dropped": [],
-      "gold_ambiguous": false,
-      "gold_budget_ceiling": null,
-      "gold_criteria": [
-        {
-          "field": "quantity_sum",
-          "operator": "gte",
-          "source": "stated",
-          "value": 3
-        },
-        {
-          "field": "item.ingredients",
-          "operator": "excludes",
-          "source": "stated",
-          "value": "mutton"
-        }
-      ],
-      "gold_merchant_scope": {
-        "category": "food_delivery",
-        "merchant_ids": []
-      },
-      "instruction": "Order 3 Paneer Tikka, no mutton, deliver by 9pm, any food delivery place is fine.",
-      "invented": 1,
-      "language": "en",
-      "missed": 1,
-      "predicted_ambiguous": false,
-      "seed_id": "S25-punjabi-paneer-category",
-      "unresolvable_paths": []
-    },
-    {
-      "captured": 0,
-      "compiled_budget_ceiling": "1800",
-      "compiled_criteria": [],
-      "compiled_delivery_latest_by": null,
-      "compiled_merchant_scope": {
-        "category": null,
-        "merchant_ids": [
-          "rest-punjabi"
-        ]
-      },
-      "compiled_prohibited": [],
-      "dropped": [],
-      "gold_ambiguous": false,
-      "gold_budget_ceiling": "1800.00",
-      "gold_criteria": [],
-      "gold_merchant_scope": {
-        "category": null,
-        "merchant_ids": [
-          "rest-punjabi"
-        ]
-      },
-      "instruction": "Order one of everything from Punjabi Dhaba for the team dinner, under ₹1800.",
-      "invented": 0,
-      "language": "en",
-      "missed": 0,
-      "predicted_ambiguous": true,
-      "seed_id": "S26-punjabi-big-cart",
-      "unresolvable_paths": []
-    },
-    {
-      "captured": 0,
-      "compiled_budget_ceiling": "500",
-      "compiled_criteria": [
-        {
-          "field": "quantity_sum",
-          "operator": "eq",
-          "source": "stated",
-          "value": 10
-        }
-      ],
-      "compiled_delivery_latest_by": null,
-      "compiled_merchant_scope": {
-        "category": null,
-        "merchant_ids": [
-          "rest-punjabi"
-        ]
-      },
-      "compiled_prohibited": [],
-      "dropped": [],
-      "gold_ambiguous": false,
-      "gold_budget_ceiling": "500.00",
-      "gold_criteria": [
-        {
-          "field": "quantity_sum",
-          "operator": "gte",
-          "source": "stated",
-          "value": 10
-        }
-      ],
-      "gold_merchant_scope": {
-        "category": null,
-        "merchant_ids": []
-      },
-      "instruction": "Punjabi Dhaba se 10 naan order karo, ₹500 se kam mein.",
-      "invented": 1,
-      "language": "hinglish",
-      "missed": 1,
-      "predicted_ambiguous": false,
-      "seed_id": "S27-punjabi-naan-hinglish",
-      "unresolvable_paths": []
-    },
-    {
-      "captured": 0,
-      "compiled_budget_ceiling": "600",
-      "compiled_criteria": [
-        {
-          "field": "item.ingredients",
-          "operator": "excludes",
-          "source": "stated",
-          "value": "artificial colour"
-        }
-      ],
-      "compiled_delivery_latest_by": "2026-08-28T20:00:00+00:00",
-      "compiled_merchant_scope": {
-        "category": null,
-        "merchant_ids": [
-          "rest-punjabi"
-        ]
-      },
-      "compiled_prohibited": [
-        "artificial colour"
-      ],
-      "dropped": [],
-      "gold_ambiguous": true,
-      "gold_budget_ceiling": "600.00",
-      "gold_criteria": [
-        {
-          "field": "item.categories",
-          "operator": "semantic",
-          "source": "stated",
-          "value": "no_artificial_colour"
-        }
-      ],
-      "gold_merchant_scope": {
-        "category": null,
-        "merchant_ids": []
-      },
-      "instruction": "Order 1 Paneer Tikka and 3 Naan from Punjabi Dhaba, nothing with artificial colour, under ₹600, deliver by 8pm.",
-      "invented": 1,
-      "language": "en",
-      "missed": 1,
-      "predicted_ambiguous": true,
-      "seed_id": "S28-punjabi-no-colour-ambiguous",
-      "unresolvable_paths": []
-    },
-    {
-      "captured": 2,
-      "compiled_budget_ceiling": "800",
-      "compiled_criteria": [
-        {
-          "field": "quantity_sum",
-          "operator": "gte",
-          "source": "stated",
-          "value": 2
-        },
-        {
-          "field": "item.ingredients",
-          "operator": "excludes",
-          "source": "stated",
-          "value": "chicken"
-        }
-      ],
-      "compiled_delivery_latest_by": "2026-08-28T21:00:00+00:00",
-      "compiled_merchant_scope": {
-        "category": null,
-        "merchant_ids": [
-          "rest-punjabi"
-        ]
-      },
-      "compiled_prohibited": [
-        "chicken"
-      ],
-      "dropped": [],
-      "gold_ambiguous": false,
-      "gold_budget_ceiling": "800.00",
-      "gold_criteria": [
-        {
-          "field": "quantity_sum",
-          "operator": "gte",
-          "source": "stated",
-          "value": 2
-        },
-        {
-          "field": "item.ingredients",
-          "operator": "excludes",
-          "source": "stated",
-          "value": "chicken"
-        }
-      ],
-      "gold_merchant_scope": {
-        "category": null,
-        "merchant_ids": [
-          "rest-punjabi"
-        ]
-      },
-      "instruction": "Order 2 Mutton Curry from Punjabi Dhaba, no chicken, under ₹800, deliver by 9pm.",
-      "invented": 0,
-      "language": "en",
-      "missed": 0,
-      "predicted_ambiguous": false,
-      "seed_id": "S29-punjabi-mutton-curry",
-      "unresolvable_paths": []
-    },
-    {
-      "captured": 1,
-      "compiled_budget_ceiling": "400",
-      "compiled_criteria": [
-        {
-          "field": "quantity_sum",
-          "operator": "gte",
-          "source": "stated",
-          "value": 3
-        },
-        {
-          "field": "item.ingredients",
-          "operator": "excludes",
-          "source": "stated",
-          "value": "frozen"
-        }
-      ],
-      "compiled_delivery_latest_by": null,
-      "compiled_merchant_scope": {
-        "category": null,
-        "merchant_ids": [
-          "grocery-freshmart"
-        ]
-      },
-      "compiled_prohibited": [
-        "frozen"
-      ],
-      "dropped": [],
-      "gold_ambiguous": false,
-      "gold_budget_ceiling": "400.00",
-      "gold_criteria": [
-        {
-          "field": "quantity_sum",
-          "operator": "gte",
-          "source": "stated",
-          "value": 3
-        },
-        {
-          "field": "item.categories",
-          "operator": "semantic",
-          "source": "stated",
-          "value": "fresh_not_frozen"
-        }
-      ],
-      "gold_merchant_scope": {
-        "category": null,
-        "merchant_ids": [
-          "grocery-freshmart"
-        ]
-      },
-      "instruction": "Order 3 Eggs 12pk from FreshMart only, must be fresh not frozen, under ₹400.",
-      "invented": 1,
-      "language": "en",
-      "missed": 1,
-      "predicted_ambiguous": true,
-      "seed_id": "S31-freshmart-fresh-not-frozen",
-      "unresolvable_paths": []
-    },
-    {
-      "captured": 0,
-      "compiled_budget_ceiling": "1550",
-      "compiled_criteria": [],
-      "compiled_delivery_latest_by": null,
-      "compiled_merchant_scope": {
-        "category": null,
-        "merchant_ids": [
-          "grocery-freshmart"
-        ]
-      },
-      "compiled_prohibited": [],
-      "dropped": [
-        "criteria[0]: could not parse value from 'one unit' (no integer found in span 'one unit')",
-        "criteria[1]: could not parse value from 'one unit' (no integer found in span 'one unit')"
-      ],
-      "gold_ambiguous": false,
-      "gold_budget_ceiling": "1550.00",
-      "gold_criteria": [],
-      "gold_merchant_scope": {
-        "category": null,
-        "merchant_ids": [
-          "grocery-freshmart"
-        ]
-      },
-      "instruction": "Order one unit of everything from FreshMart for the pantry restock, under ₹1550.",
-      "invented": 0,
-      "language": "en",
-      "missed": 0,
-      "predicted_ambiguous": true,
-      "seed_id": "S33-freshmart-big-cart",
-      "unresolvable_paths": []
-    },
-    {
-      "captured": 1,
-      "compiled_budget_ceiling": "1500",
-      "compiled_criteria": [
-        {
-          "field": "quantity_sum",
-          "operator": "eq",
-          "source": "stated",
-          "value": 2
-        },
-        {
-          "field": "item.ingredients",
-          "operator": "excludes",
-          "source": "stated",
-          "value": "eggs"
-        }
-      ],
-      "compiled_delivery_latest_by": "2026-08-28T18:00:00+00:00",
-      "compiled_merchant_scope": {
-        "category": "grocery",
-        "merchant_ids": []
-      },
-      "compiled_prohibited": [
-        "eggs"
-      ],
-      "dropped": [
-        "merchant_span: 'any grocery store' matched no catalogue merchant"
-      ],
-      "gold_ambiguous": false,
-      "gold_budget_ceiling": "1500.00",
-      "gold_criteria": [
-        {
-          "field": "quantity_sum",
-          "operator": "gte",
-          "source": "stated",
-          "value": 2
-        },
-        {
-          "field": "item.ingredients",
-          "operator": "excludes",
-          "source": "stated",
-          "value": "eggs"
-        }
-      ],
-      "gold_merchant_scope": {
-        "category": "grocery",
-        "merchant_ids": []
-      },
-      "instruction": "Order 2 Basmati Rice 5kg from any grocery store, no eggs, under ₹1500, deliver by 6pm.",
-      "invented": 1,
-      "language": "en",
-      "missed": 1,
-      "predicted_ambiguous": false,
-      "seed_id": "S35-freshmart-rice-category",
-      "unresolvable_paths": []
-    },
-    {
-      "captured": 1,
-      "compiled_budget_ceiling": "600",
-      "compiled_criteria": [
-        {
-          "field": "item.ingredients",
-          "operator": "excludes",
-          "source": "stated",
-          "value": "eggs"
-        }
-      ],
-      "compiled_delivery_latest_by": "2026-08-28T18:00:00+00:00",
-      "compiled_merchant_scope": {
-        "category": null,
-        "merchant_ids": [
-          "grocery-freshmart"
-        ]
-      },
-      "compiled_prohibited": [
-        "eggs"
-      ],
-      "dropped": [],
-      "gold_ambiguous": false,
-      "gold_budget_ceiling": "600.00",
-      "gold_criteria": [
-        {
-          "field": "quantity_sum",
-          "operator": "gte",
-          "source": "stated",
-          "value": 2
-        },
-        {
-          "field": "item.ingredients",
-          "operator": "excludes",
-          "source": "stated",
-          "value": "eggs"
-        }
-      ],
-      "gold_merchant_scope": {
-        "category": null,
-        "merchant_ids": [
-          "grocery-freshmart"
-        ]
-      },
-      "instruction": "Order 2kg Chicken Breast from FreshMart, no eggs, under ₹600, deliver by 6pm.",
-      "invented": 0,
-      "language": "en",
-      "missed": 1,
-      "predicted_ambiguous": false,
-      "seed_id": "S37-freshmart-chicken-breast",
-      "unresolvable_paths": []
-    },
-    {
-      "captured": 1,
-      "compiled_budget_ceiling": "1000",
-      "compiled_criteria": [
-        {
-          "field": "item.ingredients",
-          "operator": "excludes",
-          "source": "stated",
-          "value": "mutton"
-        }
-      ],
-      "compiled_delivery_latest_by": "2026-08-28T19:00:00+00:00",
-      "compiled_merchant_scope": {
-        "category": null,
-        "merchant_ids": [
-          "grocery-dailybasket"
-        ]
-      },
-      "compiled_prohibited": [
-        "mutton"
-      ],
-      "dropped": [],
-      "gold_ambiguous": false,
-      "gold_budget_ceiling": "1000.00",
-      "gold_criteria": [
-        {
-          "field": "item.ingredients",
-          "operator": "excludes",
-          "source": "stated",
-          "value": "mutton"
-        }
-      ],
-      "gold_merchant_scope": {
-        "category": null,
-        "merchant_ids": [
-          "grocery-dailybasket"
-        ]
-      },
-      "instruction": "Order 2kg Apples and 2 Bread Loaf from DailyBasket, no mutton, under ₹1000, deliver by 7pm.",
-      "invented": 0,
-      "language": "en",
-      "missed": 0,
-      "predicted_ambiguous": false,
-      "seed_id": "S38-dailybasket-no-mutton",
-      "unresolvable_paths": []
-    },
-    {
-      "captured": 1,
-      "compiled_budget_ceiling": null,
-      "compiled_criteria": [
-        {
-          "field": "quantity_sum",
-          "operator": "gte",
-          "source": "stated",
-          "value": 3
-        },
-        {
-          "field": "item.ingredients",
-          "operator": "excludes",
-          "source": "stated",
-          "value": "unsalted"
-        }
-      ],
-      "compiled_delivery_latest_by": "2026-08-28T19:00:00+00:00",
-      "compiled_merchant_scope": {
-        "category": "grocery",
-        "merchant_ids": []
-      },
-      "compiled_prohibited": [],
-      "dropped": [
-        "merchant_span: 'any grocery store' matched no catalogue merchant"
-      ],
-      "gold_ambiguous": true,
-      "gold_budget_ceiling": null,
-      "gold_criteria": [
-        {
-          "field": "quantity_sum",
-          "operator": "gte",
-          "source": "stated",
-          "value": 3
-        },
-        {
-          "field": "item.categories",
-          "operator": "semantic",
-          "source": "stated",
-          "value": "unsalted"
-        }
-      ],
-      "gold_merchant_scope": {
-        "category": "grocery",
-        "merchant_ids": []
-      },
-      "instruction": "Order 3 Butter 500g from any grocery store, must be unsalted, deliver by 7pm.",
-      "invented": 1,
-      "language": "en",
-      "missed": 1,
-      "predicted_ambiguous": true,
-      "seed_id": "S40-dailybasket-unsalted-category",
-      "unresolvable_paths": []
-    },
-    {
-      "captured": 0,
-      "compiled_budget_ceiling": "1500",
-      "compiled_criteria": [],
-      "compiled_delivery_latest_by": null,
-      "compiled_merchant_scope": {
-        "category": null,
-        "merchant_ids": [
-          "grocery-dailybasket"
-        ]
-      },
-      "compiled_prohibited": [],
-      "dropped": [
-        "criteria[0]: could not parse value from 'one unit' (no integer found in span 'one unit')",
-        "criteria[1]: could not parse value from 'one unit' (no integer found in span 'one unit')"
-      ],
-      "gold_ambiguous": false,
-      "gold_budget_ceiling": "1500.00",
-      "gold_criteria": [],
-      "gold_merchant_scope": {
-        "category": null,
-        "merchant_ids": [
-          "grocery-dailybasket"
-        ]
-      },
-      "instruction": "Order one unit of everything from DailyBasket for the week, under ₹1500.",
-      "invented": 0,
-      "language": "en",
-      "missed": 0,
-      "predicted_ambiguous": false,
-      "seed_id": "S41-dailybasket-big-cart",
-      "unresolvable_paths": []
-    },
-    {
-      "captured": 2,
-      "compiled_budget_ceiling": "2100",
-      "compiled_criteria": [
-        {
-          "field": "quantity_sum",
-          "operator": "gte",
-          "source": "stated",
-          "value": 5
-        },
-        {
-          "field": "item.ingredients",
-          "operator": "excludes",
-          "source": "stated",
-          "value": "mutton"
-        }
-      ],
-      "compiled_delivery_latest_by": "2026-08-28T19:00:00+00:00",
-      "compiled_merchant_scope": {
-        "category": null,
-        "merchant_ids": [
-          "grocery-dailybasket"
-        ]
-      },
-      "compiled_prohibited": [
-        "mutton"
-      ],
-      "dropped": [],
-      "gold_ambiguous": false,
-      "gold_budget_ceiling": "2100.00",
-      "gold_criteria": [
-        {
-          "field": "quantity_sum",
-          "operator": "gte",
-          "source": "stated",
-          "value": 5
-        },
-        {
-          "field": "item.ingredients",
-          "operator": "excludes",
-          "source": "stated",
-          "value": "mutton"
-        }
-      ],
-      "gold_merchant_scope": {
-        "category": null,
-        "merchant_ids": [
-          "grocery-dailybasket"
-        ]
-      },
-      "instruction": "Order 5kg Apples from DailyBasket, no mutton, under ₹2100, deliver by 7pm.",
-      "invented": 0,
-      "language": "en",
-      "missed": 0,
-      "predicted_ambiguous": false,
-      "seed_id": "S43-dailybasket-apples-no-mutton",
-      "unresolvable_paths": []
-    },
-    {
-      "captured": 2,
-      "compiled_budget_ceiling": "900",
-      "compiled_criteria": [
-        {
-          "field": "quantity_sum",
-          "operator": "gte",
-          "source": "stated",
-          "value": 2
-        },
-        {
-          "field": "item.ingredients",
-          "operator": "excludes",
-          "source": "stated",
-          "value": "mutton"
-        }
-      ],
-      "compiled_delivery_latest_by": null,
-      "compiled_merchant_scope": {
-        "category": null,
-        "merchant_ids": [
-          "grocery-dailybasket"
-        ]
-      },
-      "compiled_prohibited": [
-        "mutton"
-      ],
-      "dropped": [],
-      "gold_ambiguous": false,
-      "gold_budget_ceiling": "900.00",
-      "gold_criteria": [
-        {
-          "field": "quantity_sum",
-          "operator": "gte",
-          "source": "stated",
-          "value": 2
-        },
-        {
-          "field": "item.ingredients",
-          "operator": "excludes",
-          "source": "stated",
-          "value": "mutton"
-        }
-      ],
-      "gold_merchant_scope": {
-        "category": null,
-        "merchant_ids": []
-      },
-      "instruction": "Order 2 Eggs 6pk from DailyBasket, no mutton, under ₹900.",
-      "invented": 0,
-      "language": "en",
-      "missed": 0,
-      "predicted_ambiguous": false,
-      "seed_id": "S45-dailybasket-eggs-no-mutton",
-      "unresolvable_paths": []
     }
   ],
   "provenance": {
-    "cache_hits": 22,
-    "cache_misses": 9,
+    "cache_hits": 3,
+    "cache_misses": 0,
     "max_tokens": 4096,
     "model": "openai/gpt-oss-120b",
     "note": "A metric without its model identifier is not reproducible. Every number in this file was produced by exactly this configuration.",
@@ -1784,48 +386,48 @@
     "temperature": 0.0
   },
   "scope": "train split only — holdout untouched at Stage 4",
-  "seeds_compiled": 31,
+  "seeds_compiled": 3,
   "source_labelling": {
     "accuracy": {
       "ci_high": 1.0,
-      "ci_low": 0.8389,
-      "n": 20,
+      "ci_low": 0.3424,
+      "n": 2,
       "rate": 1.0,
-      "successes": 20
+      "successes": 2
     },
     "counts": {
-      "correct": 20,
+      "correct": 2,
       "inferred_labelled_as_stated": 0,
       "other_mismatch": 0,
       "stated_labelled_as_inferred": 0
     },
     "inferred_labelled_as_stated_rate": {
-      "ci_high": 0.1611,
+      "ci_high": 0.6576,
       "ci_low": 0.0,
-      "n": 20,
+      "n": 2,
       "rate": 0.0,
       "successes": 0
     },
-    "matched_criteria": 20,
+    "matched_criteria": 2,
     "note": "Scored only on criteria that matched gold by (field, operator, value). stated_labelled_as_inferred is the dangerous direction: the criterion survives but can no longer block, so violations clear while extraction accuracy still looks clean.",
     "stated_labelled_as_inferred_rate": {
-      "ci_high": 0.1611,
+      "ci_high": 0.6576,
       "ci_low": 0.0,
-      "n": 20,
+      "n": 2,
       "rate": 0.0,
       "successes": 0
     }
   },
   "stage": 4,
-  "train_records_in_scope": 943,
+  "train_records_in_scope": 91,
   "unresolvable_paths": {
     "count": 0,
     "note": "Field paths the model emitted that are not in core/models/fields.py.",
     "paths": [],
     "rate": {
-      "ci_high": 0.0838,
+      "ci_high": 0.4345,
       "ci_low": 0.0,
-      "n": 42,
+      "n": 5,
       "rate": 0.0,
       "successes": 0
     }

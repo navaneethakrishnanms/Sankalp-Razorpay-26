@@ -301,11 +301,18 @@ class TestCost:
     def test_default_model_has_pricing(self):
         assert DEFAULT_MODEL in MODEL_PRICING
 
-    def test_groq_pricing_is_flagged_unverified(self):
-        """An unverified price still yields a number, but must never be
-        presented as authoritative. The flag is what keeps that honest."""
-        assert MODEL_PRICING["openai/gpt-oss-120b"].verified is False
-        assert "verify" in MODEL_PRICING["openai/gpt-oss-120b"].source_note.lower()
+    def test_groq_pricing_is_flagged_verified(self):
+        """Verified 2026-09-01 against published Groq on-demand rates
+        ($0.15/$0.60 per MTok for openai/gpt-oss-120b). An unverified price
+        would still yield a number, but must never be presented as
+        authoritative — the flag is what keeps that honest either way."""
+        assert MODEL_PRICING["openai/gpt-oss-120b"].verified is True
+        assert MODEL_PRICING["openai/gpt-oss-120b"].input_usd_per_mtok == Decimal("0.15")
+        assert MODEL_PRICING["openai/gpt-oss-120b"].output_usd_per_mtok == Decimal("0.60")
+
+    def test_unverified_placeholder_model_is_still_flagged(self):
+        assert MODEL_PRICING["openai/gpt-oss-20b"].verified is False
+        assert "verify" in MODEL_PRICING["openai/gpt-oss-20b"].source_note.lower()
 
     def test_anthropic_pricing_is_marked_verified(self):
         assert MODEL_PRICING["claude-opus-5"].verified is True

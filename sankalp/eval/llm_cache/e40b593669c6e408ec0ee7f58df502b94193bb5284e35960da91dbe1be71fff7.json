@@ -1,0 +1,17 @@
+{
+  "_request": {
+    "effort": "medium",
+    "max_tokens": 1024,
+    "model": "openai/gpt-oss-120b",
+    "prompt": "You judge whether a delivered shopping cart satisfies ONE subjective requirement\nthat no deterministic check can express. Your verdict contributes to a decision\nabout whether a real payment settles.\n\n# What you are judging\n\nYou are given exactly one criterion, the evidence available about the order, and\nnothing else. Decide whether the evidence shows the requirement was met.\n\n# The three verdicts\n\n- **PASS** — the evidence shows the requirement was satisfied.\n- **FAIL** — the evidence shows the requirement was violated.\n- **ABSTAIN** — the evidence does not let you tell. This is not a failure to do\n  your job; it is the correct answer whenever the available evidence genuinely\n  does not settle the question.\n\n**Do not guess.** A guessed PASS lets a bad order through; a guessed FAIL stops\na good one. ABSTAIN is always available and is never penalised. But do not hide\nbehind it either — if the evidence plainly settles the question, say so.\n\n# You never write a number, a price, or a URL\n\nYour `reasoning` is a short sentence in plain words. It must contain no digits,\nno amounts, and no links. If you find yourself wanting to write a quantity, say\nit in words or leave it out — a downstream guard rejects authored values, and\nyour reasoning is discarded if it contains any.\n\n# Output format\n\nReturn a single JSON object and nothing else. No prose around it, no markdown\nfences.\n\n```\n{\n  \"verdict\": \"PASS | FAIL | ABSTAIN\",\n  \"confidence\": 0.0,\n  \"reasoning\": \"<one short sentence, no digits, no URLs>\"\n}\n```\n\n`confidence` is a number between zero and one expressing how sure you are of the\nverdict you gave. It is the one number you may write, and it is a confidence,\nnot a quantity from the order.\n\n# Evidence\n\nEach piece of evidence is labelled with where it came from. Treat an agent's own\nreport of its work as a claim, not as an observation — it is what the agent says\nit did, which is not the same as what happened. Catalogue data describes what\nwas actually ordered.\n\nYou are not asked to weigh evidence quality; that is handled elsewhere and is\nnot your job. Judge the requirement against what the evidence says.\n\n# The criterion to judge\n\nThe user required: \"the delivered cart exactly matches what was requested: 'Order 2kg Apples and 2 Bread Loaf from DailyBasket, no mutton, under ₹1000, deliver by 7pm.'\" (recorded against item.names).\n\n# The evidence\n\n- Source: the agent's own report of its work (a CLAIM, not an observation)\n  Content: {\"claim\": \"All items match your request. No substitutions, everything as ordered.\", \"emitter\": \"agent\"}\n",
+    "prompt_version": "semantic_verifier/v1",
+    "provider": "groq",
+    "system": "You judge whether an order satisfies one subjective requirement. You return only JSON. You never write a number, price, or URL other than a confidence value.",
+    "temperature": 0.0
+  },
+  "input_tokens": 697,
+  "latency_seconds": 0.6058238999685273,
+  "model": "openai/gpt-oss-120b",
+  "output_tokens": 94,
+  "text": "{\n  \"verdict\": \"ABSTAIN\",\n  \"confidence\": 0.7,\n  \"reasoning\": \"Only a self‑report is provided, no independent evidence of the cart contents\"\n}"
+}
