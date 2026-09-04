@@ -44,7 +44,7 @@ import json
 from datetime import datetime, timezone
 from decimal import Decimal
 from uuid import uuid4
-from typing import Annotated
+from typing import Annotated, Any
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -92,7 +92,7 @@ class AcceptanceCriterion(BaseModel):
     id:         str = Field(default_factory=lambda: str(uuid4()))
     field:      str
     operator:   CriterionOperator
-    value:      str | int | float | list
+    value:      str | int | float | list[Any]
     source:     CriterionSource
     confidence: Annotated[float, Field(ge=0.0, le=1.0)]
 

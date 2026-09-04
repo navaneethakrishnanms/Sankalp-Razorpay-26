@@ -49,6 +49,7 @@ from __future__ import annotations
 
 import dataclasses
 from decimal import Decimal
+from typing import Any, Sequence, cast
 
 from core.models.cart import Cart
 from core.models.enums import CriterionOperator, CriterionSource, Verdict
@@ -110,7 +111,7 @@ def _eval_criterion(criterion: AcceptanceCriterion, cart: Cart) -> Verdict:
     elif op == CriterionOperator.excludes:
         ok = target not in value
     elif op == CriterionOperator.in_set:
-        ok = value in target
+        ok = value in cast(Sequence[Any], target)
     else:
         raise ValueError(f"Unhandled operator: {op!r}")
 
@@ -132,7 +133,7 @@ def evaluate_constraint_checks(obligation: Obligation, cart: Cart) -> Constraint
         v = _eval_criterion(c, cart)
         criterion_verdicts[c.id] = v
         if v == Verdict.FAIL and c.field == "quantity_sum" and c.operator == CriterionOperator.gte and cart.items:
-            shortfall = int(c.value) - field_registry.resolve("quantity_sum", cart)
+            shortfall = int(cast(int, c.value)) - field_registry.resolve("quantity_sum", cart)
             if shortfall > 0:
                 loss += shortfall * cart.items[0].unit_price
                 has_loss = True

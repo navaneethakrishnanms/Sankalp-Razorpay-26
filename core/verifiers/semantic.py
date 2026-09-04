@@ -35,6 +35,7 @@ from __future__ import annotations
 import json
 import re
 from decimal import Decimal   # noqa: F401 - imported for the None-loss assertion's meaning
+from typing import Any
 
 from core.guards.output_validator import find_digit_spans, find_urls
 from core.llm.client import DEFAULT_MODEL, LLMClient, LLMRequest
@@ -180,7 +181,7 @@ def verify_all_semantic(
     evidence: list[EvidenceItem],
     *,
     client: LLMClient,
-    **kwargs,
+    **kwargs: Any,
 ) -> list[VerifierOutput]:
     """One VerifierOutput per semantic criterion. Empty list when there are none —
     this verifier never speaks about criteria that are not its own."""

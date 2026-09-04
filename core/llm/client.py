@@ -461,7 +461,7 @@ class AnthropicProvider:
         started = time.perf_counter()
         effort = request.effort if request.effort in ("low", "medium", "high", "xhigh", "max") else "high"
         try:
-            response = self._client.messages.create(
+            response = self._client.messages.create(  # type: ignore[call-overload]
                 model=request.model,
                 max_tokens=request.max_tokens,
                 system=request.system,

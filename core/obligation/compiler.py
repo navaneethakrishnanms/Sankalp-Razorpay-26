@@ -47,6 +47,7 @@ import json
 import re
 from datetime import datetime, timezone
 from decimal import Decimal, InvalidOperation
+from typing import Any
 
 from agent import catalogue
 from core.guards.output_validator import (
@@ -240,7 +241,7 @@ def _resolve_merchant_category(span: str) -> str | None:
 
 # ── Response parsing ──────────────────────────────────────────────────────
 
-def _extract_json(text: str) -> dict:
+def _extract_json(text: str) -> dict[str, Any]:
     """
     Pull the JSON object out of a model response.
 
