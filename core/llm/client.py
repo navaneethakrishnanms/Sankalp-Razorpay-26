@@ -313,7 +313,7 @@ class GroqProvider:
         for attempt in range(MAX_RETRIES):
             self._respect_pacing()
             try:
-                completion = self._client.chat.completions.create(
+                completion = self._client.chat.completions.create(  # type: ignore[call-overload]
                     model=request.model,
                     messages=[
                         {"role": "system", "content": request.system},
