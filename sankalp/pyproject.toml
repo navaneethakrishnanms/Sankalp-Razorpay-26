@@ -44,13 +44,15 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 # Only packages that actually exist — listing a missing one fails the build.
-# `api/` and `web/` arrive at Stage 7; add them here in the same commit.
-packages = ["core", "agent", "eval"]
+packages = ["core", "agent", "eval", "api"]
 
 [tool.hatch.build.targets.wheel.force-include]
 # Prompt templates are data, not code, and must ship with the package —
 # core/llm/prompts/__init__.py loads them from disk at runtime.
 "core/llm/prompts" = "core/llm/prompts"
+# The demo frontend is a static asset read from disk by api/main.py::index(),
+# not importable Python — it needs the same force-include treatment.
+"api/static" = "api/static"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

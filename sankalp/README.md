@@ -25,8 +25,8 @@ Every figure below is reproducible: `make test` (521 tests, no API key),
 | Deterministic false-block rate | **0.0%** `[0.0, 0.4]` | 3 |
 | Compiler false-block, prompt v1 → v2 (same 3-seed sample) | 14.3% → **0.0%** | 4 |
 | Compiler extraction recall, v1 → v2 | 50.0% → **75.0%** | 4 |
-| Deceptive self-report: order NOT wrongly cleared, with floor | **100%** `[80.6, 100]` (n=16) | 5 |
-| — same, floor disabled (counterfactual) | 100% `[80.6, 100]` (n=16) — see note below | 5 |
+| Floor-exclusion mechanism (confident wrong PASS, `SELF` basis, `REC` floor) | **Proven** — unit + live-engine test | 5 |
+| Floor-exclusion value on the live deceptive-self-report sample (n=16, no deterministic backup) | **UNMEASURED** — model abstained rather than risk a wrong PASS; see below | 5 |
 | Test suite | **521 passing**, 0 failing | — |
 
 **What this means in practice.** The deterministic layer alone catches five of
@@ -34,8 +34,21 @@ every six agent errors while never once interrupting a correct order — and the
 sixth is a *characterised* gap (52 records the corpus builds to be invisible to
 deterministic verification on purpose), not an unknown blind spot. The
 compiler's single documented prompt revision cut its false-block rate to zero
-on the sample measured. And the deceptive-self-report result — read the note
-below before quoting it; it is more interesting than "100%" suggests.
+on the sample measured.
+
+**On the floor-exclusion row, read this before quoting either number.** The
+mechanism — a confident wrong verdict structurally excluded before it can
+vote — is proven, deterministically, through the real engine
+([`TestLiveFooledJudge`](tests/unit/test_stage5.py)). Its *live* value on the
+16-record deceptive-self-report sample with no deterministic backup is
+**unmeasured, not zero**: the live model abstained on all 16 rather than
+producing the confident wrong PASS the floor exists to exclude, so the
+exclusion path was never actually exercised in this run. That is a genuinely
+positive result stated honestly — a verifier declining to vouch for evidence
+it cannot verify is correct behaviour, and the failure mode this architecture
+defends against did not occur with this model on this sample. It is not the
+same claim as "the floor was tested under fire and it held," and this README
+does not make that claim. Full account in [the misses table](#the-misses-table) below.
 
 ---
 
@@ -46,33 +59,44 @@ Two different questions have to be answered before an agent's payment settles:
 1. *Was the agent allowed to act, and is the record authentic?*
 2. *Did the agent actually do what you asked?*
 
-**Google's Agent Payments Protocol (AP2)** answers the first. It establishes a
-cryptographic chain of *Mandates* — signed, tamper-evident credentials recording
-what the user authorised (Intent), what the agent assembled (Cart), and what is
-charged (Payment). The result is a non-repudiable audit trail.
+**Google's Agent Payments Protocol (AP2)** — announced September 16, 2025 with
+60+ launch partners spanning card networks, processors, wallets, and merchants
+(Mastercard, PayPal, American Express, Coinbase, Etsy among them) — answers the
+first. It establishes a cryptographic chain of *Mandates*, issued as W3C
+Verifiable Credentials: signed, tamper-evident records of what the user
+authorised (**Intent**), what the agent assembled (**Cart**), and what is
+charged (**Payment**). The result is a non-repudiable audit trail.
 
-**RAILS** (arXiv 2606.08790) names the same boundary from the research side:
-authorization establishes *permitted agency*, not *fulfilled obligation*.
+AP2's own specification draws the boundary explicitly: its fulfillment binding
+"attests that a fulfillment event occurred and that a checkout completed, but
+not that the fulfillment satisfied the user's intent" — dispute resolution on
+*what was satisfied* is stated as out of scope for the protocol.
 
-Neither answers the second question. An agent can produce a perfectly valid
-Intent → Cart → Payment chain for an order that gets the quantity wrong. Every
-signature verifies. The dispute still has to be adjudicated by someone.
+**RAILS** (arXiv 2606.08790, *"RAILS: Verification-Native Clearing for Agentic
+Commerce"*) names the identical boundary from the research side, in almost
+exactly these words: *"Payment is not clearing. Authorization is not clearing.
+LLM-as-judge evaluation is not clearing."* — introducing a dedicated clearing
+function because none of the existing layers perform it.
 
-**SANKALP is that adjudication, mechanised.** It consumes authority evidence of
-the shape AP2 produces and adds the determination those protocols explicitly
-leave to an adjudicator: *did the delivered cart satisfy the obligation the
-user actually expressed?*
+Neither AP2 nor RAILS's proposed clearing function is claimed as prior
+implementation here — RAILS names the gap; SANKALP is one architecture for
+closing it. An agent can produce a perfectly valid Intent → Cart → Payment
+chain, with a fulfillment binding attesting the checkout completed, for an
+order that gets the quantity wrong. Every signature verifies. Whether the
+fulfillment satisfied the user's intent is, by AP2's own scope statement, a
+question for someone or something else.
 
-We claim the implementation, not the diagnosis. The gap is named by others; what
-is here is a working, measured system that closes it.
+**SANKALP is that determination, mechanised.** It consumes authority evidence
+of the shape AP2 produces and answers exactly the question both AP2 and RAILS
+agree is not answered by authorization: *did the delivered cart satisfy the
+obligation the user actually expressed?*
 
-> **⚠ Verify before presenting.** The AP2 description above has not been
-> independently re-verified against Google's primary sources this session.
-> Before this section is shown externally, confirm: launch date, partner
-> count, the Intent/Cart/Payment mandate names, W3C Verifiable Credential
-> issuance, and — most importantly — that AP2's own scope statement leaves
-> fulfilment adjudication out. The positioning survives if a detail is wrong;
-> a wrong specific in front of a payments panel does not.
+We claim the implementation, not the diagnosis. The gap is named by others —
+independently verified against AP2's own specification and RAILS's abstract
+this session, sources below; what is here is a working, measured system that
+closes it.
+
+*Sources: [Google Cloud — Announcing AP2](https://cloud.google.com/blog/products/ai-machine-learning/announcing-agents-to-payments-ap2-protocol) · [AP2 specification](https://ap2-protocol.org/ap2/specification/) · [Digital Commerce 360 — AP2 launch, partner count](https://www.digitalcommerce360.com/2025/09/19/google-ai-payments-protocol-ap2/) · [RAILS, arXiv:2606.08790](https://arxiv.org/abs/2606.08790)*
 
 ---
 
@@ -275,8 +299,93 @@ a reviewer to discover. From Stage 5 onward, holdout is sealed — this project'
 own harness raises `HoldoutSealedError` if a holdout record reaches it before
 Stage 8.
 
-Full write-ups, including the two Stage 5 findings, in
+Full write-ups, including the two Stage 5 findings below, in
 [`FAILURES.md`](FAILURES.md). Reproducible: `python scripts/report_corpus_provenance.py`.
+
+---
+
+## The misses table
+
+What SANKALP does not catch, and why — this is the section a clean-demo
+submission doesn't have.
+
+| Population | n | Outcome | Why |
+|---|---|---|---|
+| `QUANTITY_MISMATCH:uncatchable` | 26 | Missed | **Expected.** No field in the closed registry expresses "quantity of the item literally named X" — a per-item split (2 Chicken + 2 Veg → 1 + 3) is invisible to any check on aggregate fields by construction. |
+| `CONSTRAINT_VIOLATION:uncatchable` (semantic-only) | 26 | Missed by deterministic layer | **Expected.** `operator=semantic` criteria are out of the deterministic verifier's vocabulary by design — that is the corpus's own tautology guard (§6.1). |
+| — of which, attempted live by the semantic verifier (16 of 26) | 16 | Missed (abstained) | The live open-weights model, given only catalogue evidence for a subjective judgement ("not too spicy"), declined to assert either way. Correct behaviour under the prompt's own instruction not to guess — but it means the semantic layer added **0 recall** on this sample, not the recall gain the layer exists to provide. |
+| Everything else (362 of 414 violations) | 362 | Caught | 100% within deterministic expressive power (Stage 3); 0 unexpected misses in any run. |
+| Unexpected misses (catchable, but missed anyway) | **0** | — | Audited every run via the `verifier_catchable` check — a caught `catchable=False` record would be a mislabel, not a miss; none found to date. |
+
+**The honest reading.** The deterministic layer is not the gap here — it is
+provably complete within its reach. The gap is the semantic layer's live
+behaviour on subjective criteria given only structured catalogue data: an
+appropriately cautious model does not confidently violate anything, but it
+also does not confidently catch anything. That is a real, reportable
+limitation of *this* evidence design, not of the floor-enforcement
+architecture — see the fooled-judge finding below for the same caution
+cutting the other way (correctly).
+
+### Four things that went wrong, in order, each caught before it reached a headline
+
+**1. Compiler v1 invented criteria it was never asked for.** Given "Order 2
+Margherita from Pizza Point, no pork, under ₹900," the v1 prompt frequently
+emitted `quantity_sum eq 2` (an exact count, not the floor the corpus
+intends) and spurious `item.names contains 'chicken biryani'`-style
+criteria — treating *naming what to order* as a restriction rather than a
+shopping list. On the measured 3-seed sample this produced a 14.3%
+false-block rate: correct orders (a rounded-up pack size, a substituted
+equivalent) were blocked because the compiler had invented a rule nobody
+stated. **v2** adds two rules and nothing else — quantities are floors
+(`gte`, never `eq`) unless the user said "exactly," and naming an item is
+not itself a criterion — bringing false-block to 0.0% and extraction recall
+50%→75% on the same sample. One iteration, both runs reported, per this
+project's own rule against tuning against a measured set.
+
+**2. A corpus label bug, found by the verifier under test.** Six CLEAN
+records secretly violated a `distinct_item_count` criterion — caught because
+Stage 3's false-block proxy read 0.63% where a correct corpus must read
+exactly 0%. Full account above.
+
+**3. Fourteen more seeds, found by the compiler.** Instruction text and
+`budget_ceiling`/`delivery_window` fields disagreed on 14 seeds, introduced
+during an earlier unrelated fix. The compiler read the words correctly and
+was marked wrong. Full account above.
+
+**4. Two Stage 5 integration bugs, both caught before they reached a live
+API call or a published number.**
+
+- **Evidence-id mismatch.** The constraint verifier declares a fixed
+  sentinel evidence id as its basis (a Stage 3 stand-in, documented as such);
+  the Stage 5 evidence envelope, written independently, gave the catalogue
+  item a random id instead. The mismatch made `floor.py`'s own
+  unknown-evidence rule silently reclassify the deterministic verifier's
+  basis as `SELF` — excluding the honest `FAIL` by its *own* floor. Caught by
+  an offline scripted-provider test
+  (`tests/unit/test_stage5_harness.py`) that asserted `with-floor ≥
+  without-floor` and got `0 ≥ 2` on the very first run — before a single live
+  Groq call for Stage 5 was made. Fixed by making the catalogue evidence id a
+  named constant both modules import.
+- **Measuring the wrong population.** The first live fooled-judge run
+  returned an `architecture_value_gap` of exactly `0.0%`. That number was
+  correct arithmetic over the wrong population: it only included the 26
+  deceptive records that *always* have a deterministic `stated`-criterion
+  FAIL as backup — which this project's own enforcement rule makes absolute
+  regardless of the floor, so a ~0% gap there is the source-enforcement rule
+  working, not evidence the floor does nothing. The 16 records with *no*
+  deterministic backup — the only population where the floor's exclusion
+  path can matter — had been silently skipped. Re-run on the correct
+  population: the live model abstained on all 16 rather than producing a
+  confident wrong PASS, so `architecture_value_gap` is now reported as
+  **`UNMEASURED`**, not `0.0%` — those are different claims, and the code was
+  fixed to distinguish them rather than reporting a bare number either way.
+  The exclusion mechanism itself is proven independent of what any model
+  chooses to say, live, through the real engine, by
+  [`test_stage5.py::TestLiveFooledJudge`](tests/unit/test_stage5.py) (a
+  scripted provider forces the confident-PASS failure mode this run's model
+  declined to produce on its own).
+
+Full technical write-ups: [`FAILURES.md`](FAILURES.md).
 
 ---
 

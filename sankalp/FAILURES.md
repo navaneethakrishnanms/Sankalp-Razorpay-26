@@ -296,3 +296,16 @@ returned before concluding the mechanism did nothing. The instrument-level
 proof (a scripted provider forcing the failure mode) and the field-level
 measurement (what a real model actually does) answer different questions, and
 Stage 5's honest report needs both, not the flattering one.
+
+**Addendum — the framing itself needed a second fix.** Even after the two
+corrections above, `eval/stage5_harness.py` still reported population B's gap
+as a bare `+0.0%`, computed the same way as a genuinely-measured zero. That is
+a third, smaller instance of the same error: "0.0% gap" and "gap unmeasured on
+this sample" are different claims, and the code was not distinguishing them.
+Fixed by tracking whether the semantic verifier ever returned a confident
+`PASS` in a given population (`exclusion_path_exercised_count` /
+`gap_is_measured`); when it did not, `architecture_value_gap` is now `None`
+and the rendered report says `UNMEASURED — see note`, never a number.
+Regression tests: `tests/unit/test_stage5_harness.py::TestGapFramingIsHonest`,
+including one asserting the display string never contains `"0.0%"` when the
+gap was never exercised.

@@ -141,6 +141,69 @@ class TestDeceptiveSubsetOffline:
         assert all(r.caught_with_floor for r in results)
 
 
+class NeverPassProvider:
+    """Always ABSTAIN — reproduces the live Stage 5 result where the model
+    declined to vouch for a bare self-report."""
+
+    name = "groq"
+
+    def complete(self, request: LLMRequest) -> LLMResponse:
+        return LLMResponse(
+            text='{"verdict": "ABSTAIN", "confidence": 0.0, "reasoning": "insufficient evidence"}',
+            input_tokens=200, output_tokens=20, model=request.model,
+            from_cache=False, latency_seconds=0.01,
+        )
+
+
+class TestGapFramingIsHonest:
+    """'0% gap' and 'unmeasured' are different claims. Regression tests for
+    the exact bug this session found in its own live run: population B came
+    back 100%/100%/0% gap because the verifier abstained on every record, and
+    the raw number alone reads as 'the floor was tested and does nothing' —
+    which did not happen. What happened is the test was never triggered."""
+
+    def _run(self, provider, tmp_path):
+        from eval.stage5_harness import run_deceptive_subset
+        client = LLMClient(provider, cache_dir=tmp_path, read_cache=False, write_cache=False)
+        records = load_records()
+        subset = select_subset(records, load_split())["deceptive"]
+        pop_b = [r for r in subset if not r["labels"]["violating_criterion_ids"]][:3]
+        return run_deceptive_subset(pop_b, client)
+
+    def _gap_stats(self, pop):
+        # Mirror run_stage5's local _gap_stats without re-running the whole harness.
+        from core.models.enums import Verdict
+        n = len(pop)
+        wf = sum(1 for r in pop if r.caught_with_floor)
+        wof = sum(1 for r in pop if r.caught_without_floor)
+        exercised = [r for r in pop if r.semantic_verdict == Verdict.PASS]
+        measured = len(exercised) > 0
+        gap = round((wf / n if n else 0.0) - (wof / n if n else 0.0), 4) if measured else None
+        return {"n": n, "gap_is_measured": measured, "architecture_value_gap": gap,
+                "exclusion_path_exercised_count": len(exercised)}
+
+    def test_all_abstain_is_reported_unmeasured_not_zero(self, tmp_path):
+        results = self._run(NeverPassProvider(), tmp_path)
+        stats = self._gap_stats(results)
+        assert stats["gap_is_measured"] is False
+        assert stats["architecture_value_gap"] is None   # NOT 0.0
+        assert stats["exclusion_path_exercised_count"] == 0
+
+    def test_a_confident_pass_makes_the_gap_measured(self, tmp_path):
+        results = self._run(AlwaysPassProvider(), tmp_path)
+        stats = self._gap_stats(results)
+        assert stats["gap_is_measured"] is True
+        assert stats["exclusion_path_exercised_count"] == stats["n"]
+        assert stats["architecture_value_gap"] is not None
+
+    def test_display_string_never_shows_a_bare_zero_for_unmeasured(self, tmp_path):
+        results = self._run(NeverPassProvider(), tmp_path)
+        stats = self._gap_stats(results)
+        display = f"{stats['architecture_value_gap']:+.1%}" if stats["gap_is_measured"] else "UNMEASURED — see note"
+        assert display == "UNMEASURED — see note"
+        assert "0.0%" not in display
+
+
 class TestUncatchableSemanticOffline:
     def test_runs_without_error(self, tmp_path):
         records = load_records()

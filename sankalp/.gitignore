@@ -101,3 +101,8 @@ razorpay_*.json
 .DS_Store
 ehthumbs.db
 Desktop.ini
+
+# ── Frontend (web/) ───────────────────────────────────────────────────────────
+web/node_modules/
+web/dist/
+web/.vite/
