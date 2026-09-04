@@ -188,7 +188,7 @@ class TestLabelIntegrity:
 
     def test_total_misdeclared_records_fail_validate_total(self, records):
         from decimal import Decimal
-        from core.models.cart import Cart, CartItem, Merchant
+        from core.models.cart import CartItem, Merchant
         for r in records:
             if r["labels"]["violation_class"] != "TOTAL_MISDECLARED":
                 continue

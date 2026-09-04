@@ -13,13 +13,11 @@ TestFullCorpusRun        end-to-end sanity on the real committed corpus — this
 
 from __future__ import annotations
 
-from decimal import Decimal
 
 import pytest
 
 from core.models.enums import Verdict
 from eval.baselines import evaluate_baselines
-from eval.generator import build_corpus, build_split, records_jsonl
 from eval.harness import (
     compute_metrics,
     evaluate_record,

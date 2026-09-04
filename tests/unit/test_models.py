@@ -30,13 +30,11 @@ from core.models.enums import (
     EvidenceClass,
     Verdict,
     SettlementAction,
-    Rail,
     Finality,
 )
 from core.models.obligation import (
     AcceptanceCriterion,
     Obligation,
-    MerchantScope,
     DeliveryWindow,
     _compute_obligation_hash,
 )
@@ -47,7 +45,6 @@ from core.models.evidence import (
     make_evidence_item,
     bind_evidence,
     extend_evidence,
-    _compute_evidence_hash,
 )
 from core.models.verifier import VerifierOutput
 from core.models.clearing import ClearingDecision, _compute_clearing_hash

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from core.clearing.aggregator import aggregate
 from core.clearing.engine import build_evidence, clear
 from core.models.cart import Cart, CartItem, Merchant
 from core.models.enums import CriterionOperator, CriterionSource, EvidenceClass, Rail, SettlementAction, Verdict

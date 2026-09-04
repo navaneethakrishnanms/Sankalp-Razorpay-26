@@ -34,7 +34,7 @@ never the mechanism for clearing — exclusion happens first.
 
 from __future__ import annotations
 
-from core.models.enums import EvidenceClass, Verdict
+from core.models.enums import EvidenceClass
 from core.models.verifier import VerifierOutput
 from core.admissibility.lattice import meet, join
 

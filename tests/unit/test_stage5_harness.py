@@ -9,7 +9,6 @@ from __future__ import annotations
 from core.llm.client import LLMClient, LLMRequest, LLMResponse
 from eval.harness import load_records, load_split
 from eval.stage5_harness import (
-    HoldoutSealedError,
     run_clean_semantic_subset,
     run_deceptive_subset,
     run_uncatchable_semantic_subset,
@@ -127,7 +126,6 @@ class TestDeceptiveSubsetOffline:
         """The load-bearing counterfactual, made concrete: a confident SELF-only
         PASS with the floor off must let the payment clear (EXECUTE) — the
         exact failure floor enforcement exists to prevent."""
-        from core.models.enums import SettlementAction
         records = load_records()
         subset = select_subset(records, load_split())["deceptive"]
         pop_b = [r for r in subset if not r["labels"]["violating_criterion_ids"]][:3]

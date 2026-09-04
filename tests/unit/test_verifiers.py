@@ -12,7 +12,6 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from decimal import Decimal
 
-import pytest
 
 from core.models.cart import Cart, CartItem, Merchant
 from core.models.enums import CriterionOperator, CriterionSource, Verdict

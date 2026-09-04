@@ -145,7 +145,7 @@ label { font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; colo
 .sidebar nav a.active { background: var(--surface-2); color: var(--brass); }
 .sidebar .spacer { flex: 1; }
 
-.main { flex: 1; min-width: 0; padding: 26px 34px 60px; position: relative; }
+.main { flex: 1; min-width: 0; padding: 68px 34px 60px; position: relative; }
 
 .testmode-badge {
   position: fixed;

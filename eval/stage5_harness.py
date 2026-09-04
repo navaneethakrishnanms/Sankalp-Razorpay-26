@@ -39,17 +39,14 @@ from __future__ import annotations
 
 import dataclasses
 import json
-import statistics
 from pathlib import Path
 from typing import Any
 
-from core.clearing.aggregator import aggregate
-from core.clearing.engine import build_evidence, clear, decide_settlement
+from core.clearing.engine import build_evidence, clear
 from core.llm.client import LLMClient, default_client
 from core.models.enums import CriterionOperator, CriterionSource, EvidenceClass, SettlementAction, Verdict
 from core.models.obligation import AcceptanceCriterion
-from core.models.verifier import VerifierOutput
-from core.verifiers.constraint import ConstraintVerifier, evaluate_constraint_checks
+from core.verifiers.constraint import ConstraintVerifier
 from core.verifiers.semantic import PROMPT_VERSION as SEMANTIC_PROMPT_VERSION
 from core.verifiers.semantic import verify_semantic_criterion
 from eval.harness import load_records, load_split, record_to_models
@@ -268,7 +265,7 @@ def run_full_recall_delta(records: list[dict], split: dict[str, str], client: LL
     verdict; only the uncatchable-semantic subset's verdicts are replaced by
     what the live semantic verifier actually returned.
     """
-    train = [r for r in records if split[r["order_id"]] == "train"]
+    [r for r in records if split[r["order_id"]] == "train"]
     violations = [r for r in records if r["labels"]["violation_class"] != "CLEAN"]
 
     semantic_results = run_uncatchable_semantic_subset(

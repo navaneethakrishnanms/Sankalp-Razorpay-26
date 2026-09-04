@@ -36,7 +36,6 @@ from __future__ import annotations
 import hashlib
 import json
 from datetime import datetime, timezone
-from decimal import Decimal
 from uuid import uuid4
 
 from pydantic import BaseModel, Field, model_validator
