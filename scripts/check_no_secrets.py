@@ -43,6 +43,8 @@ SKIP_FILES = {".env"}          # gitignored by design; may legitimately hold a k
 TEXT_SUFFIXES = {
     ".py", ".md", ".txt", ".json", ".jsonl", ".toml", ".yaml", ".yml",
     ".cfg", ".ini", ".sh", ".ps1", ".bat", ".env", ".example", ".html", ".ts", ".tsx",
+    # web/ (React frontend) added late — .jsx/.js/.css must be scanned too.
+    ".jsx", ".js", ".css",
 }
 
 
