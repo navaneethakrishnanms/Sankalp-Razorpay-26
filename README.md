@@ -200,24 +200,56 @@ A span absent from the instruction is rejected
 
 ## Architecture
 
-```
-POST /api/clear
-   │
-   ├─ 1. Obligation compiler   (LLM)  NL instruction → AcceptanceCriterion[]
-   ├─ 2. Binder                       freeze + hash; unresolvable path = hard fail
-   ├─ 3. Evidence envelope            catalogue → REC, agent self-report → SELF
-   ├─ 4. Exposure scorer       (thin) band LOW | MODERATE | ELEVATED — not built this pass
-   ├─ 5. Verifier mesh
-   │      ├─ constraint  (det)  predicate evaluation over a closed registry → REC
-   │      ├─ receipt     (det)  merchant catalogue cross-check              → REC
-   │      └─ semantic    (LLM)  declares its basis from evidence it was given, never from the model
-   ├─ 6. Floor enforcement     (det)  sub-floor verifiers → weight 0, excluded pre-join
-   ├─ 7. Aggregator            (det)  weighted verdict, join over survivors only
-   ├─ 8. Clearing decision            performance + policy verdict, fault, confidence
-   └─ 9. Settlement instruction       EXECUTE | HOLD | CLARIFY | ABORT
+```mermaid
+flowchart TD
+    A["User instruction<br/><i>natural language</i>"] --> B
+
+    subgraph COMPILE["Compilation — the one place spans become values"]
+        direction TB
+        B["Obligation Compiler <b>(LLM)</b><br/>emits verbatim spans only, never authors a value"]
+        B --> C["Binder<br/>freeze + hash · unresolvable field path = hard fail"]
+    end
+
+    C --> D["Evidence Envelope<br/>catalogue → <b>REC</b> &nbsp;·&nbsp; agent self-report → <b>SELF</b>"]
+
+    subgraph MESH["Verifier Mesh — every verifier runs independently"]
+        direction LR
+        E1["Constraint Verifier<br/><i>deterministic</i><br/>closed field registry"]
+        E2["Receipt Verifier<br/><i>deterministic</i><br/>merchant catalogue cross-check"]
+        E3["Semantic Verifier <b>(LLM)</b><br/>basis set by code, never self-declared"]
+    end
+
+    D --> E1 & E2 & E3
+
+    E1 & E2 & E3 --> F{{"Floor Enforcement<br/>apply_floor partitions survivors / excluded<br/><b>before</b> join ever runs"}}
+
+    F -- "basis below floor" --> X["Excluded<br/>weight = 0 · never joins,<br/>not outvoted — absent"]
+    F -- "basis meets floor" --> G["Aggregator<br/>join(survivors) only · a <code>stated</code> FAIL hard-blocks unconditionally"]
+
+    G --> H["Clearing Decision<br/>verdict + reason_code + confidence"]
+    H --> I{{"Settlement Instruction<br/>hash-chained"}}
+
+    I --> J1["EXECUTE"]
+    I --> J2["HOLD"]
+    I --> J3["CLARIFY"]
+    I --> J4["ABORT"]
+
+    classDef llm fill:#3b2a13,stroke:#d3a24e,stroke-width:1.5px,color:#f3e6c9;
+    classDef det fill:#12222a,stroke:#4fb8a0,stroke-width:1.5px,color:#d6f3ec;
+    classDef floor fill:#2a1414,stroke:#e2685a,stroke-width:2px,color:#fbe0dc;
+    classDef excluded fill:#1a1a1a,stroke:#5b6577,color:#8d97a3,stroke-dasharray: 4 3;
+    classDef outcome fill:#161b23,stroke:#d3a24e,stroke-width:1.5px,color:#eef1f4;
+
+    class B,E3 llm;
+    class C,E1,E2,G det;
+    class F floor;
+    class X excluded;
+    class H,I,J1,J2,J3,J4 outcome;
 ```
 
-Only steps 1 and 5-semantic involve a model. Everything else is deterministic
+Legend: the two brass nodes (Obligation Compiler, Semantic Verifier) are the only components that involve a model — everything else, shown in teal, is deterministic Python. The red diamond is the floor: it partitions *before* the aggregator ever runs, which is the entire mechanism this project is built around.
+
+Only the Obligation Compiler and the Semantic Verifier involve a model. Everything else is deterministic
 Python. Design decisions and deliberate deviations — including the two Stage 5
 integration findings — are recorded in [`ARCHITECTURE.md`](ARCHITECTURE.md).
 
