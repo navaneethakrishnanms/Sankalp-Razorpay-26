@@ -34,8 +34,6 @@ Then open http://localhost:8000/
 
 from __future__ import annotations
 
-import random
-from decimal import Decimal
 from typing import Any
 
 from fastapi import FastAPI, HTTPException
@@ -44,13 +42,11 @@ from fastapi.responses import HTMLResponse, JSONResponse
 
 from api.bank import router as bank_router
 
-from core.clearing.aggregator import aggregate
 from core.clearing.engine import build_evidence, clear
-from core.models.enums import CriterionOperator, CriterionSource, EvidenceClass, Verdict
-from core.models.obligation import AcceptanceCriterion
+from core.models.enums import EvidenceClass, Verdict
 from core.models.verifier import VerifierOutput
 from core.settlement.instruction import emit, explain
-from core.verifiers.constraint import CATALOGUE_EVIDENCE_ID, ConstraintVerifier, evaluate_constraint_checks
+from core.verifiers.constraint import ConstraintVerifier
 from core.verifiers.receipt import ReceiptVerifier
 from eval.harness import load_records, load_split, record_to_models
 
