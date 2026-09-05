@@ -31,7 +31,7 @@ test-cov:
 	$(PY) -m pytest --cov=core --cov-report=term-missing
 
 lint:
-	$(PY) -m ruff check core eval agent tests
+	$(PY) -m ruff check core eval agent scripts tests api mcp_server
 	$(PY) -m mypy core
 
 corpus:

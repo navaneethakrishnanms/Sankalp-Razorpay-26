@@ -1,0 +1,488 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found]){display:none!important}</style></head><body>
+<title>FloorGate</title>
+<meta name="description" content="Live view of SANKALP's admissibility floor: a confident semantic PASS excluded before aggregation, the deterministic FAIL carrying the decision.">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+  :root{
+    --bg: #0c0f14;
+    --bg-raised: #12161d;
+    --bg-card: #161b23;
+    --line: #262d38;
+    --line-soft: #1c222b;
+    --ink: #e7ebf1;
+    --ink-dim: #97a2b3;
+    --ink-faint: #5b6577;
+    --brass: #d3a24e;
+    --brass-dim: #7d6438;
+    --pass: #4fb8a0;
+    --pass-dim: #2b4a44;
+    --fail: #e2685a;
+    --fail-dim: #4a2e2c;
+    --ghost: #454e5c;
+    --shadow: 0 20px 60px -20px rgba(0,0,0,0.6);
+  }
+  :root:not([data-theme="light"]){
+    /* dark is default look; media query kept for system=light override below */
+  }
+  @media (prefers-color-scheme: light){
+    :root:not([data-theme="dark"]){
+      --bg: #f3f1ea;
+      --bg-raised: #ffffff;
+      --bg-card: #ffffff;
+      --line: #ddd7c8;
+      --line-soft: #e8e3d6;
+      --ink: #1c1a15;
+      --ink-dim: #5c584c;
+      --ink-faint: #928c7a;
+      --brass: #9c6f22;
+      --brass-dim: #c9a35e;
+      --pass: #1f7d68;
+      --pass-dim: #cfe9e2;
+      --fail: #b8382a;
+      --fail-dim: #f3d9d4;
+      --ghost: #a39c8a;
+      --shadow: 0 20px 50px -25px rgba(60,50,20,0.25);
+    }
+  }
+  :root[data-theme="light"]{
+    --bg: #f3f1ea; --bg-raised: #ffffff; --bg-card: #ffffff;
+    --line: #ddd7c8; --line-soft: #e8e3d6;
+    --ink: #1c1a15; --ink-dim: #5c584c; --ink-faint: #928c7a;
+    --brass: #9c6f22; --brass-dim: #c9a35e;
+    --pass: #1f7d68; --pass-dim: #cfe9e2;
+    --fail: #b8382a; --fail-dim: #f3d9d4;
+    --ghost: #a39c8a;
+    --shadow: 0 20px 50px -25px rgba(60,50,20,0.25);
+  }
+  :root[data-theme="dark"]{
+    --bg: #0c0f14; --bg-raised: #12161d; --bg-card: #161b23;
+    --line: #262d38; --line-soft: #1c222b;
+    --ink: #e7ebf1; --ink-dim: #97a2b3; --ink-faint: #5b6577;
+    --brass: #d3a24e; --brass-dim: #7d6438;
+    --pass: #4fb8a0; --pass-dim: #2b4a44;
+    --fail: #e2685a; --fail-dim: #4a2e2c;
+    --ghost: #454e5c;
+    --shadow: 0 20px 60px -20px rgba(0,0,0,0.6);
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:'IBM Plex Sans', system-ui, sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .mono{ font-family:'IBM Plex Mono', ui-monospace, monospace; }
+
+  .wrap{ max-width:1180px; margin:0 auto; padding:44px 32px 80px; }
+
+  header.top{
+    display:flex; align-items:baseline; justify-content:space-between;
+    gap:24px; margin-bottom:8px; flex-wrap:wrap;
+  }
+  .brand{
+    display:flex; align-items:baseline; gap:12px;
+  }
+  .brand .mark{
+    font-family:'Fraunces', serif; font-weight:600; font-size:22px;
+    letter-spacing:0.02em; color:var(--brass);
+  }
+  .brand .sub{
+    font-size:12.5px; color:var(--ink-faint); font-family:'IBM Plex Mono',monospace;
+    letter-spacing:0.04em; text-transform:uppercase;
+  }
+  .stage-pill{
+    font-family:'IBM Plex Mono',monospace; font-size:11.5px; letter-spacing:0.06em;
+    text-transform:uppercase; color:var(--ink-dim); border:1px solid var(--line);
+    padding:5px 10px; border-radius:100px; background:var(--bg-raised);
+  }
+
+  h1{
+    font-family:'Fraunces', serif; font-weight:500; font-size:clamp(28px,3.6vw,40px);
+    line-height:1.12; margin:18px 0 10px; text-wrap:balance; letter-spacing:-0.01em;
+  }
+  h1 em{ font-style:normal; color:var(--brass); }
+  .lede{
+    color:var(--ink-dim); font-size:15.5px; line-height:1.6; max-width:64ch; margin:0 0 36px;
+  }
+
+  /* ── obligation strip ───────────────────────────────────────────── */
+  .obligation{
+    display:flex; gap:0; align-items:stretch; background:var(--bg-card);
+    border:1px solid var(--line); border-radius:12px; margin-bottom:40px;
+    box-shadow:var(--shadow); overflow:hidden;
+  }
+  .obligation .field{
+    flex:1 1 0; padding:16px 20px; border-right:1px solid var(--line-soft);
+    min-width:0;
+  }
+  .obligation .field:last-child{ border-right:none; }
+  .field .k{
+    font-family:'IBM Plex Mono',monospace; font-size:10.5px; letter-spacing:0.08em;
+    text-transform:uppercase; color:var(--ink-faint); margin-bottom:6px;
+  }
+  .field .v{ font-size:14.5px; color:var(--ink); line-height:1.4; }
+  .field .v.quote{ font-style:italic; color:var(--ink-dim); }
+  .field.floor .v{
+    font-family:'IBM Plex Mono',monospace; font-weight:600; color:var(--brass); font-size:15px;
+  }
+
+  /* ── lattice ─────────────────────────────────────────────────────── */
+  .lattice-row{
+    display:flex; align-items:center; gap:8px; margin:0 0 44px;
+    padding:18px 22px; background:var(--bg-raised); border:1px solid var(--line);
+    border-radius:12px;
+  }
+  .lattice-label{
+    font-family:'IBM Plex Mono',monospace; font-size:10.5px; letter-spacing:0.08em;
+    text-transform:uppercase; color:var(--ink-faint); margin-right:14px; white-space:nowrap;
+  }
+  .lattice{ display:flex; align-items:center; gap:6px; flex:1; min-width:0; }
+  .lattice .step{ display:flex; align-items:center; gap:6px; flex:1; min-width:0; }
+  .rung{
+    flex:1; text-align:center; font-family:'IBM Plex Mono',monospace; font-size:12.5px;
+    padding:8px 4px; border-radius:8px; border:1px solid var(--line);
+    color:var(--ink-faint); background:var(--bg-card); position:relative;
+  }
+  .rung.below{ color:var(--ghost); border-style:dashed; opacity:0.6; }
+  .rung.floor{
+    color:var(--bg); background:var(--brass); border-color:var(--brass); font-weight:600;
+  }
+  .rung.above{ color:var(--ink); border-color:var(--line); }
+  .arrow{ color:var(--ink-faint); font-size:13px; flex:0 0 auto; }
+  .floor-caret{
+    position:absolute; top:-19px; left:50%; transform:translateX(-50%);
+    font-family:'IBM Plex Mono',monospace; font-size:9.5px; letter-spacing:0.06em;
+    text-transform:uppercase; color:var(--brass); white-space:nowrap;
+  }
+
+  /* ── section label ───────────────────────────────────────────────── */
+  .section-label{
+    font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:0.1em;
+    text-transform:uppercase; color:var(--ink-faint); margin:0 0 16px;
+    display:flex; align-items:center; gap:10px;
+  }
+  .section-label::after{ content:''; flex:1; height:1px; background:var(--line); }
+
+  /* ── verifier -> gate -> survivors flow ─────────────────────────── */
+  .flow{
+    display:grid; grid-template-columns: 1.35fr 0.7fr 1fr; gap:0; align-items:stretch;
+    margin-bottom:16px;
+  }
+  .col{ display:flex; flex-direction:column; gap:16px; padding:0 22px; }
+  .col:first-child{ padding-left:0; }
+  .col:last-child{ padding-right:0; }
+  .col-title{
+    font-family:'IBM Plex Mono',monospace; font-size:10.5px; letter-spacing:0.08em;
+    text-transform:uppercase; color:var(--ink-faint); margin-bottom:2px;
+  }
+
+  .vcard{
+    background:var(--bg-card); border:1px solid var(--line); border-radius:12px;
+    padding:18px 20px; position:relative; transition:opacity .2s;
+  }
+  .vcard .row1{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px; }
+  .vcard .role{ font-family:'Fraunces',serif; font-size:16.5px; font-weight:500; }
+  .verdict-chip{
+    font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:600; letter-spacing:0.05em;
+    padding:3px 10px; border-radius:100px; white-space:nowrap;
+  }
+  .verdict-chip.pass{ background:var(--pass-dim); color:var(--pass); }
+  .verdict-chip.fail{ background:var(--fail-dim); color:var(--fail); }
+
+  .conf-row{ display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+  .conf-label{ font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:var(--ink-faint); width:76px; flex:0 0 auto; }
+  .conf-bar{ flex:1; height:6px; background:var(--line-soft); border-radius:100px; overflow:hidden; }
+  .conf-fill{ height:100%; border-radius:100px; }
+  .conf-fill.pass{ background:var(--pass); }
+  .conf-fill.fail{ background:var(--fail); }
+  .conf-num{ font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--ink-dim); width:38px; text-align:right; flex:0 0 auto; }
+
+  .basis-row{ display:flex; align-items:center; gap:8px; font-size:12.5px; color:var(--ink-dim); margin-bottom:10px; }
+  .basis-badge{
+    font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:600; padding:2px 8px;
+    border-radius:5px; border:1px solid var(--line);
+  }
+  .basis-badge.self{ color:var(--fail); border-color:var(--fail-dim); background:var(--fail-dim); }
+  .basis-badge.rec{ color:var(--pass); border-color:var(--pass-dim); background:var(--pass-dim); }
+
+  .evidence-quote{
+    font-size:12.5px; color:var(--ink-faint); line-height:1.5; padding-top:10px;
+    border-top:1px solid var(--line-soft); font-style:italic;
+  }
+  .evidence-quote .src{ font-style:normal; font-family:'IBM Plex Mono',monospace; font-size:10px;
+    text-transform:uppercase; letter-spacing:0.06em; color:var(--ink-faint); display:block; margin-bottom:4px; }
+
+  .vcard.excluded{ opacity:0.42; }
+  .vcard.excluded .role, .vcard.excluded .verdict-chip{ filter:grayscale(0.4); }
+  .exclusion-stamp{
+    position:absolute; top:14px; right:16px; font-family:'IBM Plex Mono',monospace;
+    font-size:9.5px; letter-spacing:0.08em; text-transform:uppercase; color:var(--fail);
+    border:1px solid var(--fail-dim); padding:2px 7px; border-radius:100px; background:var(--fail-dim);
+  }
+  .weight-zero{
+    margin-top:10px; padding-top:10px; border-top:1px dashed var(--line);
+    font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:var(--fail);
+  }
+  .weight-full{
+    margin-top:10px; padding-top:10px; border-top:1px dashed var(--line);
+    font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:var(--pass);
+  }
+
+  /* gate column */
+  .gate-col{ display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; position:relative; }
+  .gate-visual{
+    width:100%; display:flex; flex-direction:column; align-items:center; gap:0;
+  }
+  .gate-track{ position:relative; width:2px; background:var(--line); flex:1; min-height:64px; }
+  .gate-plate{
+    width:96px; padding:10px 6px; text-align:center; background:var(--brass);
+    color:var(--bg); border-radius:8px; font-family:'IBM Plex Mono',monospace;
+    font-size:11px; font-weight:700; letter-spacing:0.04em; box-shadow:0 8px 22px -8px rgba(211,162,78,0.45);
+  }
+  .gate-plate .fl{ font-size:16px; display:block; margin-top:1px; }
+  .gate-note{
+    font-size:11px; color:var(--ink-faint); text-align:center; max-width:150px; line-height:1.45;
+    font-family:'IBM Plex Mono',monospace;
+  }
+  .gate-arrow-down{ color:var(--ink-faint); font-size:20px; line-height:1; margin:2px 0; }
+  .gate-blocked{
+    display:flex; align-items:center; gap:6px; color:var(--fail);
+    font-family:'IBM Plex Mono',monospace; font-size:10.5px; letter-spacing:0.03em;
+  }
+  .gate-passed{
+    display:flex; align-items:center; gap:6px; color:var(--pass);
+    font-family:'IBM Plex Mono',monospace; font-size:10.5px; letter-spacing:0.03em;
+  }
+
+  /* survivors */
+  .join-note{
+    font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--ink-faint);
+    background:var(--bg-raised); border:1px solid var(--line-soft); border-radius:8px;
+    padding:10px 14px; line-height:1.5;
+  }
+  .join-note b{ color:var(--ink-dim); }
+
+  /* ── decision banner ─────────────────────────────────────────────── */
+  .decision{
+    margin-top:36px; display:flex; align-items:center; gap:22px; flex-wrap:wrap;
+    background:linear-gradient(135deg, var(--fail-dim), var(--bg-card) 65%);
+    border:1px solid var(--fail-dim); border-radius:14px; padding:26px 28px; box-shadow:var(--shadow);
+  }
+  .decision .action{
+    font-family:'Fraunces',serif; font-weight:600; font-size:32px; color:var(--fail);
+    letter-spacing:-0.01em;
+  }
+  .decision .meta{ display:flex; flex-direction:column; gap:4px; }
+  .decision .meta .reason{ font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--ink-dim); }
+  .decision .meta .basis{ font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:var(--ink-faint); }
+  .decision .spacer{ flex:1; }
+  .decision .hash{
+    font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--ink-faint);
+    text-align:right; line-height:1.6;
+  }
+  .decision .hash b{ color:var(--ink-dim); display:block; font-size:10px; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:2px;}
+
+  /* ── caption ─────────────────────────────────────────────────────── */
+  .thesis{
+    margin-top:34px; padding:26px 30px; border-left:3px solid var(--brass);
+    background:var(--bg-raised); border-radius:0 12px 12px 0;
+  }
+  .thesis p{
+    font-family:'Fraunces', serif; font-size:20px; line-height:1.5; margin:0;
+    color:var(--ink); text-wrap:balance;
+  }
+  .thesis p em{ font-style:normal; color:var(--brass); }
+  .thesis .cite{
+    margin-top:12px; font-family:'IBM Plex Mono',monospace; font-size:11px;
+    color:var(--ink-faint); letter-spacing:0.02em;
+  }
+
+  footer{
+    margin-top:40px; padding-top:20px; border-top:1px solid var(--line);
+    display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px;
+    font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--ink-faint);
+  }
+
+  @media (max-width:860px){
+    .flow{ grid-template-columns:1fr; }
+    .col{ padding:0; }
+    .gate-col{ flex-direction:row; padding:10px 0; }
+    .gate-track{ display:none; }
+    .decision{ flex-direction:column; align-items:flex-start; }
+    .decision .hash{ text-align:left; }
+  }
+</style>
+
+<div class="wrap">
+
+  <header class="top">
+    <div class="brand">
+      <span class="mark">SANKALP</span>
+      <span class="sub">Clearing Console — Audit View</span>
+    </div>
+    <span class="stage-pill">Floor Gate · Live Mechanism</span>
+  </header>
+
+  <h1>A confident verdict, <em>structurally excluded</em> before it can vote.</h1>
+  <p class="lede">
+    This is one real clearing decision, replayed from the corpus. Two verifiers examined the
+    same order. One was certain and wrong. The floor removed it before aggregation ever ran —
+    not by argument, by construction.
+  </p>
+
+  <div class="obligation">
+    <div class="field" style="flex:1.6;">
+      <div class="k">Instruction</div>
+      <div class="v quote">"Order 2 Margherita from Pizza Point. No pork. Keep it under ₹900."</div>
+    </div>
+    <div class="field">
+      <div class="k">Obligation</div>
+      <div class="v mono">obl-7f2a19c4e0b3</div>
+    </div>
+    <div class="field floor">
+      <div class="k">Admissibility floor</div>
+      <div class="v">REC</div>
+    </div>
+  </div>
+
+  <div class="lattice-row">
+    <span class="lattice-label">Admissibility lattice</span>
+    <div class="lattice">
+      <div class="step">
+        <div class="rung below">SELF</div>
+        <span class="arrow">&lt;</span>
+      </div>
+      <div class="step">
+        <div class="rung below">SIGN</div>
+        <span class="arrow">&lt;</span>
+      </div>
+      <div class="step">
+        <div class="rung below">WIT</div>
+        <span class="arrow">&lt;</span>
+      </div>
+      <div class="step">
+        <div class="rung floor">
+          <span class="floor-caret">floor →</span>
+          REC
+        </div>
+        <span class="arrow">&lt;</span>
+      </div>
+      <div class="step" style="flex:0 0 auto; min-width:64px;">
+        <div class="rung above">ATT</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-label">Verifier mesh → floor enforcement → survivor set</div>
+
+  <div class="flow">
+    <div class="col">
+      <div class="col-title">Verifiers report</div>
+
+      <div class="vcard excluded" id="semantic-card">
+        <span class="exclusion-stamp">excluded pre-join</span>
+        <div class="row1">
+          <span class="role">Semantic verifier</span>
+          <span class="verdict-chip pass">PASS</span>
+        </div>
+        <div class="conf-row">
+          <span class="conf-label">confidence</span>
+          <div class="conf-bar"><div class="conf-fill pass" style="width:99%;"></div></div>
+          <span class="conf-num mono">0.99</span>
+        </div>
+        <div class="basis-row">
+          declared basis <span class="basis-badge self">SELF</span>
+        </div>
+        <div class="evidence-quote">
+          <span class="src">agent self-report</span>
+          "All items match your request. No substitutions, everything as ordered."
+        </div>
+        <div class="weight-zero">weight = 0.00 · basis below floor</div>
+      </div>
+
+      <div class="vcard" id="constraint-card">
+        <div class="row1">
+          <span class="role">Constraint verifier</span>
+          <span class="verdict-chip fail">FAIL</span>
+        </div>
+        <div class="conf-row">
+          <span class="conf-label">confidence</span>
+          <div class="conf-bar"><div class="conf-fill fail" style="width:100%;"></div></div>
+          <span class="conf-num mono">1.00</span>
+        </div>
+        <div class="basis-row">
+          declared basis <span class="basis-badge rec">REC</span>
+        </div>
+        <div class="evidence-quote">
+          <span class="src">merchant catalogue</span>
+          Cart contains "Pepperoni" — ingredients include pork. Criterion <span class="mono">item.ingredients excludes pork</span> fails.
+        </div>
+        <div class="weight-full">weight = 1.00 · basis meets floor</div>
+      </div>
+    </div>
+
+    <div class="col gate-col">
+      <div class="gate-visual">
+        <div class="gate-track"></div>
+        <div class="gate-plate">FLOOR<span class="fl">REC</span></div>
+        <div class="gate-track"></div>
+      </div>
+      <div class="gate-note">apply_floor partitions survivors from excluded — before join ever runs</div>
+    </div>
+
+    <div class="col">
+      <div class="col-title">Survivor set</div>
+
+      <div class="vcard" style="opacity:.35; border-style:dashed;">
+        <div class="row1">
+          <span class="role" style="font-size:14px;">Semantic PASS</span>
+          <span class="verdict-chip" style="background:var(--line-soft); color:var(--ink-faint);">absent</span>
+        </div>
+        <div class="gate-blocked">✕ did not meet REC floor — not outvoted, not present</div>
+      </div>
+
+      <div class="vcard" style="border-color:var(--pass-dim);">
+        <div class="row1">
+          <span class="role" style="font-size:14px;">Constraint FAIL</span>
+          <span class="verdict-chip fail">carries</span>
+        </div>
+        <div class="gate-passed">✓ REC meets REC floor — sole admissible basis</div>
+      </div>
+
+      <div class="join-note">
+        <b>join([REC])</b> → REC · aggregate basis class = <b>REC</b><br>
+        Survivor set size: 1 of 2 verifiers. Non-promotion holds: no combination of
+        excluded verdicts can clear the floor after the fact.
+      </div>
+    </div>
+  </div>
+
+  <div class="decision">
+    <span class="action">ABORT</span>
+    <div class="meta">
+      <span class="reason">reason_code: STATED_CRITERION_FAILED</span>
+      <span class="basis">basis_class: REC · confidence: 1.00</span>
+    </div>
+    <div class="spacer"></div>
+    <div class="hash">
+      <b>clearing decision</b>
+      cd-a91f...66e2
+      <b style="margin-top:6px;">settlement</b>
+      si-3b08...d4a7 → ABORT
+    </div>
+  </div>
+
+  <div class="thesis">
+    <p>The wrong verdict is <em>structurally absent</em> from the survivor set — not outvoted.</p>
+    <div class="cite">core/admissibility/floor.py · proven at tests/unit/test_admissibility.py::TestFloorEnforcementFooledJudge · live at core/clearing/aggregator.py</div>
+  </div>
+
+  <footer>
+    <span>SANKALP — Intent-Fulfilment Clearing for Agentic UPI Commerce</span>
+    <span>Stage 5 · Floor enforcement running live</span>
+  </footer>
+
+</div>
+
+</body></html>

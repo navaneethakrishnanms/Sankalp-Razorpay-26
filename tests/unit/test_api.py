@@ -40,6 +40,15 @@ class TestIndex:
         assert "text/html" in resp.headers["content-type"]
         assert "<html" in resp.text.lower()
 
+    def test_floorgate_page_serves_html(self):
+        """Served from this app directly, not dependent on an externally
+        shared artifact link's visibility setting — see README."""
+        resp = client.get("/floorgate")
+        assert resp.status_code == 200
+        assert "text/html" in resp.headers["content-type"]
+        assert "<html" in resp.text.lower()
+        assert "structurally excluded" in resp.text.lower()
+
 
 class TestScenarioList:
     def test_lists_every_registered_scenario(self):

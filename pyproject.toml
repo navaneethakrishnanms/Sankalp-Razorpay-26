@@ -40,8 +40,15 @@ dev = [
     "pytest-cov>=5.0",
     "pytest-asyncio>=0.23",
     "pytest-timeout>=2.3",
-    "ruff>=0.4",
-    "mypy>=1.10",
+    # Pinned exact, not floored: an unpinned ruff>=0.4 let CI silently pick up
+    # 0.16.6, which enables new default rules (FURB157, SIM115, ...) that flag
+    # 202 findings never checked against when this codebase was written —
+    # the CI "Lint" step failed on every push since the repo was flattened,
+    # for this reason, not a real regression. Same failure shape as the
+    # unpinned `mcp` dependency above; same fix. Bumping ruff/mypy is a
+    # deliberate, reviewed change, not something a floor should do silently.
+    "ruff==0.14.10",
+    "mypy==2.3.1",
 ]
 
 [project.scripts]

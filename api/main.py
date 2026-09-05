@@ -326,3 +326,12 @@ def architecture_proof() -> str:
     sidebar link, unbuilt and dependency-free."""
     from pathlib import Path
     return (Path(__file__).parent / "static" / "index.html").read_text(encoding="utf-8")
+
+
+@app.get("/floorgate", response_class=HTMLResponse)
+def floorgate() -> str:
+    """The FloorGate one-page mechanism walkthrough, served from this app
+    directly — not dependent on an externally-shared link's visibility
+    setting. See README's 'Live demo' link."""
+    from pathlib import Path
+    return (Path(__file__).parent / "static" / "floorgate.html").read_text(encoding="utf-8")

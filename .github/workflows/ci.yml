@@ -34,12 +34,15 @@ jobs:
 
       - name: Lint
         run: |
-          python -m ruff check core eval agent scripts tests
+          python -m ruff check core eval agent scripts tests api mcp_server
           python -m mypy core
 
       - name: Stage 3 evaluation (deterministic, no LLM)
         run: python -c "from eval.harness import write_results; write_results()"
 
       - name: Fail if committed results drifted
-        # The published numbers must match what the current code produces.
-        run: git diff --exit-code eval/results/ eval/corpus/
+        # The published numbers must match what the current code produces —
+        # except stage3_results' latency figures, which are wall-clock
+        # measurements and never bit-identical run to run on different
+        # hardware. See scripts/check_results_no_drift.py's module docstring.
+        run: python scripts/check_results_no_drift.py

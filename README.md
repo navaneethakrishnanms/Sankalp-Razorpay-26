@@ -9,7 +9,7 @@ complete and admissible. You are still out the money.
 
 SANKALP is the layer that catches that before the payment clears.
 
-**Live demo of the core mechanism:** [FloorGate — a confident verdict, structurally excluded before it can vote](https://claude.ai/code/artifact/962246ec-47fd-47a2-8974-d9f79c434ac4)
+**Live demo of the core mechanism:** [FloorGate — a confident verdict, structurally excluded before it can vote](https://claude.ai/code/artifact/962246ec-47fd-47a2-8974-d9f79c434ac4). If that link doesn't load for you, it's served from this app too — run it (see [Running it](#running-it)) and open `http://localhost:8000/floorgate`.
 
 ---
 
